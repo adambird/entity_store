@@ -16,5 +16,5 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
 
   s.add_dependency('mongo', '~> 1.6')
-  s.add_dependency('bson', '~> 1.6')
+  s.add_dependency('bson_ext', '~> 1.6')
 end
