@@ -18,7 +18,7 @@ module EntityStore
     end
     
     def attributes
-      methods = self.public_methods.select {|m| m =~ /\w\=$/ && m != :connection_profile=}
+      methods = self.public_methods.select {|m| m =~ /\w\=$/}
       Hash[*methods.collect {|m| [m.to_s.chop.to_sym, self.send(m.to_s.chop)] }.flatten]
     end
   end

@@ -6,15 +6,15 @@ module EntityStore
   require 'entity_store/event_bus'
   require 'entity_store/not_found'
   
-  def connection_profile
+  def self.connection_profile
     @@_connection_profile ||= "mongodb://localhost/entity_store_default"
   end
   
-  def connection_profile=(value)
+  def self.connection_profile=(value)
     @@_connection_profile = value
   end
   
-  def event_subscribers
+  def self.event_subscribers
     @@_event_subscribers ||=[]
   end
   
