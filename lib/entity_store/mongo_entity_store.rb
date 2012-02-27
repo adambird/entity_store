@@ -1,4 +1,5 @@
 require 'mongo'
+require 'uri'
 
 module EntityStore
   class MongoEntityStore

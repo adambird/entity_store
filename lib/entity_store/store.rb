@@ -23,7 +23,7 @@ module EntityStore
         e.entity_id = entity.id.to_s
         @storage_client.add_event(e)
       end
-      entity.pending_events.each {|e| EntityStore.event_bus.publish(e) }
+      entity.pending_events.each {|e| EventBus.publish(e) }
     end
 
     def get!(id)
