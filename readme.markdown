@@ -34,7 +34,7 @@ The corresponding event would look like this
 
 The `record_event` method adds the event to the entity's `pending_events` queue and applies the event. 
 
-The entity is passed the an instance of the entity store via the `save` method (new entities use 'add`). This results in the pending events being persisted to the `entity_events` collection in the configured MongoDB repository.
+The entity is passed the an instance of the entity store via the `save` method (new entities use `add`). This results in the pending events being persisted to the `entity_events` collection in the configured MongoDB repository.
 
 ## Subscribing to events
 
@@ -56,4 +56,7 @@ An initialiser file should contain something similar to this
 ## TODO
 
 + Concurrency - actually do something with the version of the entity
++ Backup - make copy of all events to external store
++ Restore - restore all backed up events
++ Replay - make it easy to replay events to new subscribers
 		
