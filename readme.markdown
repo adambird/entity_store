@@ -40,9 +40,7 @@ The entity is passed the an instance of the entity store via the `save` method (
 
 In order to denormalise the event susbcribers need to be configured to receive events that are published to the internal event bus. 
 
-In order to subscribe to an event then a subscriber must expose a instance method matching the event's receiver_name. This is, by default the lower case event class name with underscores between words.
-
-	TypeInflated => tyre_inflated
+In order to subscribe to an event then a subscriber must expose a instance method matching the event's receiver_name. This is, by default the lower case event class name with underscores between words, eg: a `TyreInflated` event is received by a `tyre_inflated` method.
 
 ## Configuration
 
