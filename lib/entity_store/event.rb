@@ -29,14 +29,16 @@ module EntityStore
     end
     
     module ClassMethods
-      def time_attribute(name)
+      def time_attribute(*names)
         class_eval do
-          define_method "#{name}=" do |value|
-            require 'time'
-            instance_variable_set("@#{name}", value.kind_of?(String) ? Time.parse(value) : value)
-          end
-          define_method name do
-            instance_variable_get "@#{name}"
+          names.each do |name|
+            define_method "#{name}=" do |value|
+              require 'time'
+              instance_variable_set("@#{name}", value.kind_of?(String) ? Time.parse(value) : value)
+            end
+            define_method name do
+              instance_variable_get "@#{name}"
+            end
           end
         end
       end
