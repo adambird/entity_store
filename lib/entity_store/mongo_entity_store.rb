@@ -70,8 +70,9 @@ module EntityStore
         rescue => e
           logger = Logger.new(STDERR)
           logger.error "Error loading type #{attrs['_type']}"
+          nil
         end
-      end
+      end.select { |e| !e.nil? }
     end
   end
 end
