@@ -64,7 +64,14 @@ module EntityStore
     end
 
     def get_events(id)
-      events.find('_entity_id' => BSON::ObjectId.from_string(id)).collect {|attrs| attrs['_type'].constantize.new(attrs) }
+      events.find('_entity_id' => BSON::ObjectId.from_string(id)).collect do |attrs| 
+        begin
+          attrs['_type'].constantize.new(attrs)
+        rescue => e
+          logger = Logger.new(STDERR)
+          logger.error "Error loading type #{attrs['_type']}"
+        end
+      end
     end
   end
 end

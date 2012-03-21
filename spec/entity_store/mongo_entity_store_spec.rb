@@ -26,4 +26,5 @@ describe MongoEntityStore do
     end
     
   end
+  
 end
