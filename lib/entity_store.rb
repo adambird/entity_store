@@ -1,5 +1,6 @@
 module EntityStore
   require 'entity_store/entity'
+  require 'entity_store/entity_value'
   require 'entity_store/event'
   require 'entity_store/store'
   require 'entity_store/mongo_entity_store'
