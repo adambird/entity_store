@@ -2,7 +2,7 @@ require 'spec_helper'
 
 class DummyValue
   include EntityValue
-  define_attributes :town, :county
+  attr_accessor :town, :county
 
 end
 

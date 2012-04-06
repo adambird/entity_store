@@ -1,13 +1,14 @@
 require "spec_helper"
 
-class DummyEntityValue
-  include EntityValue
-  define_attributes :name, :home
-end
-
 class NestedEntityValue
   include EntityValue
-  define_attributes :street, :town
+  attr_accessor :street, :town
+end
+
+class DummyEntityValue
+  include EntityValue
+  attr_accessor :name
+  entity_value_attribute :home, NestedEntityValue
 end
 
 describe EntityValue do

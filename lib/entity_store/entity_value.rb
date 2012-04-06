@@ -10,22 +10,14 @@ module EntityStore
       attr.each_pair { |k,v| self.send("#{k}=", v) }
     end
     
+    def attributes
+      Hash[*public_methods.select {|m| m =~ /\w\=$/}.collect do |m|
+        attribute_name = m.to_s.chop.to_sym
+        [attribute_name, send(attribute_name).respond_to?(:attributes) ? send(attribute_name).attributes : send(attribute_name)]
+      end.flatten]
+    end
+    
     module ClassMethods
-      def define_attributes(*attrs)
-        attrs.each do |a|
-          define_method(a) { instance_variable_get("@#{a}")}
-          define_method("#{a}=") { |value| instance_variable_set("@#{a}", value)}
-        end
-        define_method(:attributes) do 
-          hash = {}
-          attrs.each do |m| 
-            value = send(m)
-            hash[m] = value.respond_to?(:attributes) ? value.send(:attributes) : value
-          end
-          hash
-        end
-      end
-      
       def entity_value_attribute(name, klass)
         define_method(name) { instance_variable_get("@#{name}") }
         define_method("#{name}=") do |value|
