@@ -2,7 +2,7 @@ require 'spec_helper'
 
 class DummyValue
   include EntityValue
-  attr_accessor :town, :county
+  define_attributes :town, :county
 
 end
 
@@ -14,18 +14,43 @@ class DummyEvent
 end
 
 describe Event do
+  before(:each) do
+    @id = random_integer
+    @name = random_string
+    @time = random_time
+    @town = random_string
+    @county = random_string
+  end
+  describe "#initialize" do
+    
+    subject { DummyEvent.new({:entity_id => @id, :name => @name, :updated_at => @time, :sent_at => nil, :address => {:town => @town, :county => @county}})}
+    
+    it "should set entity_id" do
+      subject.entity_id.should eq(@id)
+    end
+    it "should set name" do
+      subject.name.should eq(@name)
+    end
+    it "should set updated_at" do
+      subject.updated_at.should eq(@time)
+    end
+    it "should set town" do
+      subject.address.town.should eq(@town)
+    end
+    it "should set county" do
+      subject.address.county.should eq(@county)
+    end
+  end
+  
   describe "#attributes" do
     before(:each) do
-      @id = random_integer
-      @name = random_string
-      @time = random_time
-      @event = DummyEvent.new(:entity_id => @id, :name => @name, :updated_at => @time)
+      @event = DummyEvent.new(:entity_id => @id, :name => @name, :updated_at => @time, :address => DummyValue.new(:town => @town, :county => @county))
     end
     
     subject { @event.attributes }
     
     it "returns a hash of the attributes" do
-      subject.should eq({:entity_id => @id, :name => @name, :updated_at => @time, :sent_at => nil, :address => nil})
+      subject.should eq({:entity_id => @id, :name => @name, :updated_at => @time, :sent_at => nil, :address => {:town => @town, :county => @county}})
     end
   end
   

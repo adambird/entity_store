@@ -4,7 +4,7 @@ module EntityStore
     
     def initialize(attrs={})
       attrs.each_pair do |key, value|         
-        self.send("#{key}=", value) if self.respond_to?("#{key}=")
+        send("#{key}=", value) if respond_to?("#{key}=")
       end
     end
     
@@ -18,8 +18,10 @@ module EntityStore
     end
     
     def attributes
-      methods = self.public_methods.select {|m| m =~ /\w\=$/}
-      Hash[*methods.collect {|m| [m.to_s.chop.to_sym, self.send(m.to_s.chop)] }.flatten]
+      Hash[*public_methods.select {|m| m =~ /\w\=$/}.collect do |m|
+        attribute_name = m.to_s.chop.to_sym
+        [attribute_name, send(attribute_name).respond_to?(:attributes) ? send(attribute_name).attributes : send(attribute_name)]
+      end.flatten]
     end
     
     def self.included(klass)

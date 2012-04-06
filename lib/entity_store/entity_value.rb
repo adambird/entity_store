@@ -16,13 +16,20 @@ module EntityStore
           define_method(a) { instance_variable_get("@#{a}")}
           define_method("#{a}=") { |value| instance_variable_set("@#{a}", value)}
         end
-        define_method("attributes") do 
+        define_method(:attributes) do 
           hash = {}
           attrs.each do |m| 
             value = send(m)
             hash[m] = value.respond_to?(:attributes) ? value.send(:attributes) : value
           end
           hash
+        end
+      end
+      
+      def entity_value_attribute(name, klass)
+        define_method(name) { instance_variable_get("@#{name}") }
+        define_method("#{name}=") do |value|
+          instance_variable_set("@#{name}", value.is_a?(Hash) ? klass.new(value) : value)
         end
       end
     end
