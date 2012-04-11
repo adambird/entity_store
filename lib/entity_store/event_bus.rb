@@ -5,7 +5,12 @@ module EntityStore
         publish_externally event
         
         subscribers_to(event.receiver_name).each do |s|
-          s.new.send(event.receiver_name, event)
+          begin
+            s.new.send(event.receiver_name, event)
+            EntityStore.logger.debug { "called #{s.name}##{event.receiver_name} with #{event.inspect}" }
+          rescue => e
+            EntityStore.logger.error { "#{e.message} when calling #{s.name}##{event.receiver_name} with #{event.inspect}" }
+          end
         end
       end
 
