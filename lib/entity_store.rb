@@ -26,7 +26,7 @@ module EntityStore
     end
     
     def log_level
-      @_log_level ||= Logger::INFO
+      @_log_level ||= Logger::DEBUG
     end
     
     def log_level=(value)

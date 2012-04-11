@@ -10,8 +10,8 @@ describe EventBus do
     before(:each) do
       @event = DummyEvent.new(:name => random_string)
       @subscriber = mock("Subscriber", :dummy_event => true)
-      @subscriber_class = mock("SubscriberClass", :instance_method_names => ['dummy_event'], :new => @subscriber)
-      @subscriber_class2 = mock("SubscriberClass", :instance_method_names => ['bilge'])
+      @subscriber_class = mock("SubscriberClass", :instance_method_names => ['dummy_event'], :new => @subscriber, :name => "SubscriberClass")
+      @subscriber_class2 = mock("SubscriberClass", :instance_method_names => ['bilge'], :name => "SubscriberClass")
       EventBus.stub(:subscribers).and_return([@subscriber_class, @subscriber_class2])
       EventBus.stub(:publish_externally)
     end
