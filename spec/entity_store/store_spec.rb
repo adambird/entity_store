@@ -16,8 +16,9 @@ describe Store do
       @new_id = random_string
       @entity = DummyEntity.new(random_string)
       @storage_client = mock("StorageClient", :add_entity => @new_id)
-      @store = Store.new(@storage_client)
+      @store = Store.new
       @store.stub(:add_events)
+      @store.stub(:storage_client) { @storage_client }
     end
     
     subject { @store.add(@entity) }
@@ -42,7 +43,8 @@ describe Store do
       @entity.pending_events << mock(Event, :entity_id= => true)
       @entity.pending_events << mock(Event, :entity_id= => true)
       @storage_client = mock("StorageClient", :add_event => true)
-      @store = Store.new(@storage_client)
+      @store = Store.new
+      @store.stub(:storage_client) { @storage_client }
       EventBus.stub(:publish)
     end
     
@@ -62,7 +64,7 @@ describe Store do
     end
     it "publishes each event to the EventBus" do
       @entity.pending_events.each do |e|
-        EventBus.should_receive(:publish).with(e)
+        EventBus.should_receive(:publish).with(@entity.type, e)
       end
       subject
     end
@@ -74,8 +76,9 @@ describe Store do
       @new_id = random_string
       @entity = DummyEntity.new(random_string)
       @storage_client = mock("StorageClient", :save_entity => true)
-      @store = Store.new(@storage_client)
+      @store = Store.new
       @store.stub(:add_events)
+      @store.stub(:storage_client) { @storage_client }
     end
     
     subject { @store.save(@entity) }
@@ -105,7 +108,8 @@ describe Store do
       @events = [mock("Event", :apply => true), mock("Event", :apply => true)]
   
       @storage_client = mock("StorageClient", :get_entity => @entity, :get_events => @events)
-      @store = Store.new(@storage_client)
+      @store = Store.new
+      @store.stub(:storage_client) { @storage_client }
     end
     
     subject { @store.get(@id) }

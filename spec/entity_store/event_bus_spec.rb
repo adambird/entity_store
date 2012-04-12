@@ -6,9 +6,12 @@ class DummyEvent
 end
 
 describe EventBus do
+  before(:each) do
+    @entity_type = random_string
+    @event = DummyEvent.new(:name => random_string)
+  end
   describe ".publish" do
     before(:each) do
-      @event = DummyEvent.new(:name => random_string)
       @subscriber = mock("Subscriber", :dummy_event => true)
       @subscriber_class = mock("SubscriberClass", :instance_method_names => ['dummy_event'], :new => @subscriber, :name => "SubscriberClass")
       @subscriber_class2 = mock("SubscriberClass", :instance_method_names => ['bilge'], :name => "SubscriberClass")
@@ -16,7 +19,7 @@ describe EventBus do
       EventBus.stub(:publish_externally)
     end
     
-    subject { EventBus.publish(@event) }
+    subject { EventBus.publish(@entity_type, @event) }
     
     it "calls the receiver method on the subscriber" do
       @subscriber.should_receive(:dummy_event).with(@event)
@@ -27,12 +30,22 @@ describe EventBus do
       subject
     end
     it "publishes event to the external event push" do
-      EventBus.should_receive(:publish_externally).with(@event)
+      EventBus.should_receive(:publish_externally).with(@entity_type, @event)
       subject
     end
   end
   
   describe ".publish_externally" do
-    it "should publish it to external"
+    before(:each) do
+      @external_store = mock(ExternalStore)
+      EventBus.stub(:external_store) { @external_store }
+    end
+    
+    subject { EventBus.publish_externally @entity_type, @event }
+    
+    it "should publish to the external store" do
+      @external_store.should_receive(:publish_event).with(@entity_type, @event)
+      subject
+    end
   end
 end

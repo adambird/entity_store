@@ -1,8 +1,8 @@
 module EntityStore
   class EventBus
     class << self
-      def publish(event)
-        publish_externally event
+      def publish(entity_type, event)
+        publish_externally entity_type, event
         
         subscribers_to(event.receiver_name).each do |s|
           begin
@@ -22,8 +22,12 @@ module EntityStore
         EntityStore.event_subscribers
       end
       
-      def publish_externally(event)
-        
+      def publish_externally(entity_type, event)
+        external_store.publish_event(entity_type, event)
+      end
+      
+      def external_store
+        @_external_store ||= ExternalStore.new
       end
     end
   end
