@@ -19,12 +19,11 @@ module EntityStore
     end
     
     def events
-      return @events_collection if @events_collection
-      
-      @events_collection = open_connection['entity_events']
-      @events_collection.ensure_index([['entity_id', Mongo::ASCENDING], ['_id', Mongo::ASCENDING]])
-      
-      return @events_collection
+      @events_collection ||= open_connection['entity_events']
+    end
+    
+    def ensure_indexes
+      events_collection.ensure_index([['entity_id', Mongo::ASCENDING], ['_id', Mongo::ASCENDING]])      
     end
     
     def add_entity(entity)
