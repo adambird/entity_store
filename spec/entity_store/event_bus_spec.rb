@@ -44,7 +44,7 @@ describe EventBus do
     subject { EventBus.publish_externally @entity_type, @event }
     
     it "should publish to the external store" do
-      @external_store.should_receive(:publish_event).with(@entity_type, @event)
+      @external_store.should_receive(:add_event).with(@entity_type, @event)
       subject
     end
   end

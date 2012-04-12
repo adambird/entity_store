@@ -14,19 +14,30 @@ module EntityStore
       Connection.from_uri(EntityStore.external_connection_profile).db(uri.path.gsub(/^\//, ''))
     end
     
-    def events
-      @events_collection ||= open_connection['events']
+    def collection
+      @_collection ||= open_connection['events']
     end
     
-    def publish_event(entity_type, event)
-      events.insert({
+    def ensure_indexes
+      collection.ensure_index([['_type', Mongo::ASCENDING], ['_id', Mongo::ASCENDING]])      
+    end
+    
+    def add_event(entity_type, event)
+      collection.insert({
         '_entity_type' => entity_type, '_type' => event.class.name 
         }.merge(event.attributes)
       )
     end
     
-    def method_name
+    def get_events(opts={})
+      query = {}
+      query['_id'] = { '$gt' => opts[:after] } if opts[:after]
+      query['_type'] = opts[:type] if opts[:type]
       
+      options = {:sort => [['_id', -1]]}
+      options[:limit] = opts[:limit] || 100
+      
+      collection.find(query, options).collect { |e| EventDataObject.new(e)}
     end
     
   end

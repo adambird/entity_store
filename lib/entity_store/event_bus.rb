@@ -23,7 +23,7 @@ module EntityStore
       end
       
       def publish_externally(entity_type, event)
-        external_store.publish_event(entity_type, event)
+        external_store.add_event(entity_type, event)
       end
       
       def external_store

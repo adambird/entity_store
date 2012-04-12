@@ -5,6 +5,7 @@ module EntityStore
   require 'entity_store/event'
   require 'entity_store/store'
   require 'entity_store/external_store'
+  require 'entity_store/event_data_object'
   require 'entity_store/mongo_entity_store'
   require 'entity_store/event_bus'
   require 'entity_store/not_found'
