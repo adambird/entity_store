@@ -38,11 +38,43 @@ The entity is passed the an instance of the entity store via the `save` method (
 
 ## Subscribing to events
 
-In order to denormalise the event susbcribers need to be configured to receive events that are published to the internal event bus. 
+In order to denormalise the event subscribers need to be configured to receive events that are published to the internal event bus. 
 
 In order to subscribe to an event then a subscriber must expose a instance method matching the event's receiver_name. This is, by default the lower case event class name with underscores between words
 
 eg: a `TyreInflated` event is received by a `tyre_inflated` method.
+
+## Entity Values
+
+The EntityValue module provides extensions to support complex objects as values on attributes. For example.
+
+	class Address
+		include EntityStore::EntityValue
+		
+		attr_accessor :street, :town, :county, :post_code, :country
+	end
+	
+	class HomeAddressSet
+		include EntityStore::Event
+		
+		entity_value_attribute :home_address, Address
+		
+		def	apply(entity)
+			entity.home_address = home_address
+		end
+	end
+	
+	class Member
+		include EntityStore::Entity
+		
+		attr_accessor :first_name, :last_name, :home_address
+	
+		def set_home_address(address)
+			record_event(HomeAddressSet.new(:home_address => address))
+		end
+	end
+		
+You'll note that a class method `entity_value_attribute` is used to mark up the corresponding event correctly. Slightly uncomfortable that this isn't a poro (plain old ruby object) class. Will investigate this later.
 
 ## Configuration
 
