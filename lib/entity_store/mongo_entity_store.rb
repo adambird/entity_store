@@ -35,7 +35,7 @@ module EntityStore
     end
     
     def add_event(event)
-      events.insert({'_type' => event.class.name}.merge(event.attributes) ).to_s
+      events.insert({'_type' => event.class.name, '_entity_id' => event.entity_id }.merge(event.attributes) ).to_s
     end
     
     def get_entity!(id)
