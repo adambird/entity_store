@@ -47,4 +47,31 @@ describe EntityValue do
     end
     
   end
+  
+  describe "#==" do
+    
+    subject { @this == @other }
+    
+    context "when values are equal" do
+      before(:each) do
+        @this = DummyEntityValue.new(:name => random_string)
+        @other = DummyEntityValue.new(:name => @this.name)
+      end
+      
+      it "should be true" do
+        subject.should be_true
+      end    
+    end
+
+    context "when values are not equal" do
+      before(:each) do
+        @this = DummyEntityValue.new(:name => random_string)
+        @other = DummyEntityValue.new(:name => random_string)
+      end
+      
+      it "should be false" do
+        subject.should be_false
+      end    
+    end
+  end
 end

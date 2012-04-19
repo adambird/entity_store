@@ -17,6 +17,13 @@ module EntityStore
       end.flatten]
     end
     
+    def ==(other)
+      attributes.each_key do |attr|
+        return false unless other.respond_to?(attr) && send(attr) == other.send(attr)
+      end
+      return true
+    end
+    
     module ClassMethods
       def entity_value_attribute(name, klass)
         define_method(name) { instance_variable_get("@#{name}") }
