@@ -47,9 +47,13 @@ module EntityStore
       unless @_logger
         @_logger = Logger.new(STDOUT)
         @_logger.progname = "Entity_Store"
+        @_logger.level = log_level
       end
-      @_logger.level = log_level
       @_logger
+    end
+    
+    def logger=(value)
+      @_logger = value
     end
   end
 
