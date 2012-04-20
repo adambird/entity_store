@@ -8,6 +8,9 @@ module EntityStore
       entity.id = storage_client.add_entity(entity)  
       add_events(entity)
       return entity
+    rescue => e
+      EntityStore.logger.error { "EntityStore#add entity: #{entity.inspect} error: #{e.inspect}" }
+      raise e
     end
     
     def save(entity)
@@ -16,6 +19,9 @@ module EntityStore
       storage_client.save_entity(entity)
       add_events(entity)
       return entity
+    rescue => e
+      EntityStore.logger.error { "EntityStore#add entity: #{entity.inspect} error: #{e.inspect}" }
+      raise e
     end
     
     def add_events(entity)

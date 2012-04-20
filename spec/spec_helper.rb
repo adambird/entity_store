@@ -2,6 +2,10 @@ require 'rake'
 require 'rspec'
 require "#{Rake.application.original_dir}/lib/entity_store"
 
+RSpec.configure do |config|
+  config.color_enabled = true
+end
+
 include EntityStore
 
 def random_string
