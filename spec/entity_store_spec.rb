@@ -12,14 +12,4 @@ describe EntityStore do
     end
   end
   
-  describe ".logger" do
-    before(:each) do
-      EntityStore.setup do |config|
-        config.log_level = Logger::ERROR
-      end
-    end
-    it "returns a logger with the correct log level" do
-      EntityStore.logger.level.should eq(Logger::ERROR)
-    end
-  end
 end

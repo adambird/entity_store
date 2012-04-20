@@ -9,7 +9,7 @@ module EntityStore
       add_events(entity)
       return entity
     rescue => e
-      EntityStore.logger.error { "EntityStore#add entity: #{entity.inspect} error: #{e.inspect}" }
+      EntityStore.logger.error { "Store#add error: #{e.inspect} - #{entity.inspect}" }
       raise e
     end
     
@@ -20,7 +20,7 @@ module EntityStore
       add_events(entity)
       return entity
     rescue => e
-      EntityStore.logger.error { "EntityStore#add entity: #{entity.inspect} error: #{e.inspect}" }
+      EntityStore.logger.error { "Store#save error: #{e.inspect} - #{entity.inspect}" }
       raise e
     end
     
