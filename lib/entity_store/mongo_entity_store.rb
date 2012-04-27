@@ -45,7 +45,7 @@ module EntityStore
     def get_entity(id, raise_exception=false)
       begin
         if attrs = entities.find('_id' => BSON::ObjectId.from_string(id)).first
-          Kernel.const_get(attrs['_type']).new('id' => id, 'version' => attrs['version'])
+          Object.const_get(attrs['_type']).new('id' => id, 'version' => attrs['version'])
         else
           if raise_exception
             raise NotFound.new(id)
@@ -65,7 +65,7 @@ module EntityStore
     def get_events(id)
       events.find('_entity_id' => BSON::ObjectId.from_string(id)).collect do |attrs| 
         begin
-          Kernel.const_get(attrs['_type']).new(attrs)
+          Object.const_get(attrs['_type']).new(attrs)
         rescue => e
           logger = Logger.new(STDERR)
           logger.error "Error loading type #{attrs['_type']}"
