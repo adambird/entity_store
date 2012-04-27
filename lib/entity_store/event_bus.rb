@@ -15,7 +15,7 @@ module EntityStore
       end
 
       def subscribers_to(event_name)
-        subscribers.select { |s| s.instance_method_names.include?(event_name) }
+        subscribers.select { |s| s.instance_methods.include?(event_name.to_sym) }
       end
             
       def subscribers

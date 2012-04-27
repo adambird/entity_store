@@ -5,6 +5,12 @@ class DummyEvent
   attr_accessor :name
 end
 
+class DummySubscriber
+  def dummy_event
+    
+  end
+end
+
 describe EventBus do
   before(:each) do
     @entity_type = random_string
@@ -13,9 +19,9 @@ describe EventBus do
   describe ".publish" do
     before(:each) do
       @subscriber = mock("Subscriber", :dummy_event => true)
-      @subscriber_class = mock("SubscriberClass", :instance_method_names => ['dummy_event'], :new => @subscriber, :name => "SubscriberClass")
-      @subscriber_class2 = mock("SubscriberClass", :instance_method_names => ['bilge'], :name => "SubscriberClass")
-      EventBus.stub(:subscribers).and_return([@subscriber_class, @subscriber_class2])
+      DummySubscriber.stub(:new) { @subscriber }
+      @subscriber_class2 = mock("SubscriberClass", :instance_methods => ['bilge'], :name => "SubscriberClass")
+      EventBus.stub(:subscribers).and_return([DummySubscriber, @subscriber_class2])
       EventBus.stub(:publish_externally)
     end
     
