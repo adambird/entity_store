@@ -3,7 +3,7 @@ module EntityStore
     def storage_client
       @storage_client || MongoEntityStore.new
     end
-
+    
     def add(entity)      
       entity.id = storage_client.add_entity(entity)  
       add_events(entity)
@@ -42,5 +42,15 @@ module EntityStore
       end    
       return entity
     end
+  
+    # Public : USE AT YOUR PERIL this clears the ENTIRE data store
+    # 
+    # Returns nothing
+    def clear_all
+      storage_client.entities.drop
+      storage_client.events.drop
+      @storage_client = nil
+    end
+  
   end
 end
