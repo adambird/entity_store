@@ -16,7 +16,7 @@ module EntityStore
     end
     
     def connection_profile
-      @_connection_profile ||= "mongodb://localhost/entity_store_default"
+      @_connection_profile
     end
 
     def connection_profile=(value)
@@ -24,7 +24,7 @@ module EntityStore
     end
 
     def external_connection_profile
-      @_external_connection_profile ||= "mongodb://localhost/external_entity_store_default"
+      @_external_connection_profile
     end
 
     def external_connection_profile=(value)
