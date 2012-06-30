@@ -50,7 +50,7 @@ module EntityStore
     def get_entity(id, raise_exception=false)
       begin
         if attrs = entities.find('_id' => BSON::ObjectId.from_string(id)).first
-          attrs['_type'].constantize.new('id' => id, 'version' => attrs['version'])
+          get_type_constant(attrs['_type']).new('id' => id, 'version' => attrs['version'])
         else
           if raise_exception
             raise NotFound.new(id)
@@ -70,13 +70,17 @@ module EntityStore
     def get_events(id)
       events.find('_entity_id' => BSON::ObjectId.from_string(id)).collect do |attrs|
         begin
-          attrs['_type'].constantize.new(attrs)
+          get_type_constant(attrs['_type']).new(attrs)
         rescue => e
           logger = Logger.new(STDERR)
           logger.error "Error loading type #{attrs['_type']}"
           nil
         end
       end.select { |e| !e.nil? }
+    end
+    
+    def get_type_constant(type_name)
+      type_name.split('::').inject(Object) {|obj, name| obj.const_get(name) }
     end
   end
 end
