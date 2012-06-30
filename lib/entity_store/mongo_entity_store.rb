@@ -78,7 +78,7 @@ module EntityStore
         end
       end.select { |e| !e.nil? }
     end
-    
+
     def get_type_constant(type_name)
       type_name.split('::').inject(Object) {|obj, name| obj.const_get(name) }
     end
