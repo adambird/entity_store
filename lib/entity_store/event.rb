@@ -1,13 +1,13 @@
 module EntityStore
   module Event
-    attr_accessor :entity_id
-    
+    attr_accessor :entity_id, :entity_version
+
     def initialize(attrs={})
-      attrs.each_pair do |key, value|         
+      attrs.each_pair do |key, value|
         send("#{key}=", value) if respond_to?("#{key}=")
       end
     end
-    
+
     def receiver_name
       elements = self.class.name.split('::')
       elements[elements.count - 1].
@@ -16,20 +16,20 @@ module EntityStore
          tr("-", "_").
          downcase
     end
-    
+
     def attributes
       Hash[*public_methods.select {|m| m =~ /\w\=$/}.collect do |m|
         attribute_name = m.to_s.chop.to_sym
         [attribute_name, send(attribute_name).respond_to?(:attributes) ? send(attribute_name).attributes : send(attribute_name)]
       end.flatten]
     end
-    
+
     def self.included(klass)
       klass.class_eval do
         extend ClassMethods
       end
     end
-    
+
     module ClassMethods
       def time_attribute(*names)
         class_eval do
@@ -44,7 +44,7 @@ module EntityStore
           end
         end
       end
-      
+
       def entity_value_attribute(name, klass)
         define_method(name) { instance_variable_get("@#{name}") }
         define_method("#{name}=") do |value|
