@@ -11,7 +11,7 @@ module EntityStore
 
     def open_store
       uri  = URI.parse(EntityStore.connection_profile)
-      connection = Connection.from_uri(EntityStore.connection_profile, :connecttimeoutms => connect_timeout)
+      connection = Connection.from_uri(EntityStore.connection_profile)
       connection.db(uri.path.gsub(/^\//, ''))
     end
 
