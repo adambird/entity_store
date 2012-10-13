@@ -5,23 +5,36 @@ GEM
     bson_ext (1.7.0)
       bson (~> 1.7.0)
     diff-lcs (1.1.3)
+    growl (1.0.3)
+    guard (1.4.0)
+      listen (>= 0.4.2)
+      thor (>= 0.14.6)
+    guard-rspec (2.1.0)
+      guard (>= 1.1)
+      rspec (~> 2.11)
+    listen (0.5.3)
     mongo (1.7.0)
       bson (~> 1.7.0)
     rake (0.9.2.2)
+    rb-fsevent (0.9.2)
     rspec (2.11.0)
       rspec-core (~> 2.11.0)
       rspec-expectations (~> 2.11.0)
       rspec-mocks (~> 2.11.0)
     rspec-core (2.11.1)
-    rspec-expectations (2.11.2)
+    rspec-expectations (2.11.3)
       diff-lcs (~> 1.1.3)
-    rspec-mocks (2.11.2)
+    rspec-mocks (2.11.3)
+    thor (0.16.0)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
   bson_ext
+  growl
+  guard-rspec
   mongo
   rake
+  rb-fsevent (~> 0.9.1)
   rspec
