@@ -1,0 +1,69 @@
+require "spec_helper"
+
+class DummyEntity
+  include Entity
+
+  related_entities :club, :user
+
+end
+
+describe Entity do
+  describe ".related_entities" do
+    before(:each) do
+      @entity_loader = mock(Store)
+      @club = mock('Entity', :id => random_string)
+      @user = mock('Entity', :id => random_string)
+      @entity = DummyEntity.new(:related_entity_loader => @entity_loader, :club_id => @club.id, :user_id => @user.id)
+      @entity_loader.stub(:get) { |id| 
+        case id
+        when @club.id
+          @club 
+        when @user.id
+          @user
+        end
+      }
+    end
+
+    it "should have the club_id set" do
+      @entity.club_id.should eq(@club.id)
+    end
+    it "should load club" do
+      @entity.club.should eq(@club)
+    end
+    it "should call entity_loader with club id" do
+      @entity_loader.should_receive(:get).with(@club.id)
+      @entity.club
+    end
+    it "should have the user_id set" do
+      @entity.user_id.should eq(@user.id)
+    end
+    it "should load user" do
+      @entity.user.should eq(@user)
+    end
+    it "should call entity_loader with user id" do
+      @entity_loader.should_receive(:get).with(@user.id)
+      @entity.user
+    end
+
+    context "when only user loaded" do
+      before(:each) do
+        @entity.user
+      end
+
+      it "should only have user in the loaded related entities collection" do
+        @entity.loaded_related_entities.should eq([@user])
+      end
+    end
+
+    context "when both user and club loaded" do
+      before(:each) do
+        @entity.club
+        @entity.user
+      end
+
+      it "should only have user in the loaded related entities collection" do
+        @entity.loaded_related_entities.should eq([@club, @user])
+      end
+    end
+  end
+end

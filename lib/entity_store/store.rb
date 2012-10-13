@@ -7,20 +7,34 @@ module EntityStore
     def add(entity)
       entity.id = storage_client.add_entity(entity)
       add_events(entity)
-      return entity
+      entity
     rescue => e
       EntityStore.logger.error { "Store#add error: #{e.inspect} - #{entity.inspect}" }
       raise e
     end
 
     def save(entity)
+      do_save entity
+      entity.loaded_related_entities.each do |e|
+        do_save e
+      end
+      entity
+    end
+
+    def do_save(entity)
       # need to look at concurrency if we start storing version on client
-      entity.version += 1
-      storage_client.save_entity(entity)
-      add_events(entity)
-      return entity
+      unless entity.pending_events.empty?
+        entity.version += 1
+        if entity.id
+          storage_client.save_entity(entity)
+        else
+          entity.id = storage_client.add_entity(entity)
+        end
+        add_events(entity)
+      end
+      entity
     rescue => e
-      EntityStore.logger.error { "Store#save error: #{e.inspect} - #{entity.inspect}" }
+      EntityStore.logger.error { "Store#do_save error: #{e.inspect} - #{entity.inspect}" }
       raise e
     end
 
@@ -41,7 +55,9 @@ module EntityStore
       if entity = storage_client.get_entity(id, raise_exception)
         storage_client.get_events(id).each { |e| e.apply(entity) }
       end
-      return entity
+      # assign this entity loader to allow lazy loading of related entities
+      entity.related_entity_loader = self
+      entity
     end
 
     # Public : USE AT YOUR PERIL this clears the ENTIRE data store
