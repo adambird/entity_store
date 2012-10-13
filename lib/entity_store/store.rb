@@ -52,9 +52,9 @@ module EntityStore
     def get(id, raise_exception=false)
       if entity = storage_client.get_entity(id, raise_exception)
         storage_client.get_events(id).each { |e| e.apply(entity) }
+        # assign this entity loader to allow lazy loading of related entities
+        entity.related_entity_loader = self
       end
-      # assign this entity loader to allow lazy loading of related entities
-      entity.related_entity_loader = self
       entity
     end
 
