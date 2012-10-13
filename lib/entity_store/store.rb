@@ -15,9 +15,7 @@ module EntityStore
 
     def save(entity)
       do_save entity
-      entity.loaded_related_entities.each do |e|
-        do_save e
-      end
+      entity.loaded_related_entities.each do |e| do_save e end if entity.respond_to?(:loaded_related_entities)
       entity
     end
 
