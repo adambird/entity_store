@@ -182,7 +182,8 @@ describe Store do
       subject
     end
     it "should assign itself as the related_entity_loader" do
-      subject.related_entity_loader.should eq(@store)
+      @entity.should_receive(:related_entity_loader=).with(@store)
+      subject
     end
     it "should return a ride" do
       subject.should eq(@entity)

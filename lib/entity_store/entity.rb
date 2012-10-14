@@ -4,7 +4,7 @@ module EntityStore
     
     # Holds a reference to the store used to load this entity so the same store
     # can be used for related entities
-    attr_accessor :related_entity_loader
+    attr_writer :related_entity_loader
 
     attr_writer :version
 
@@ -24,8 +24,8 @@ module EntityStore
 
           # lazy loader for related entity
           define_method(name) {
-            if instance_variable_get("@#{name}_id") && related_entity_loader
-              instance_variable_get("@_#{name}") || instance_variable_set("@_#{name}", related_entity_loader.get(instance_variable_get("@#{name}_id")))
+            if instance_variable_get("@#{name}_id") && @related_entity_loader
+              instance_variable_get("@_#{name}") || instance_variable_set("@_#{name}", @related_entity_loader.get(instance_variable_get("@#{name}_id")))
             end
           }
         end
@@ -60,6 +60,14 @@ module EntityStore
   
     def apply_event(event)
       event.apply(self)
+    end
+
+    # Public - generate attributes hash 
+    def attributes
+      Hash[*public_methods.select {|m| m =~ /\w\=$/}.select{ |m| respond_to?(m.to_s.chop.to_sym) }.collect do |m|
+        attribute_name = m.to_s.chop.to_sym
+        [attribute_name, send(attribute_name).respond_to?(:attributes) ? send(attribute_name).attributes : send(attribute_name)]
+      end.flatten]
     end
   end
 end
