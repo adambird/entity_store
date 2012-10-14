@@ -39,6 +39,14 @@ module EntityStore
       entities.update({'_id' => BSON::ObjectId.from_string(entity.id)}, { '$set' => { 'version' => entity.version } })
     end
 
+    # Public - create a snapshot of the entity and store in the entities collection
+    # 
+    def snapshot_entity(entity)
+      query = {'_id' => BSON::ObjectId.from_string(entity.id)}
+      updates = { '$set' => { 'snapshot' => entity.attributes } }
+      entities.update(query, updates, { :upsert => true} )
+    end
+
     def add_event(event)
       events.insert({'_type' => event.class.name, '_entity_id' => BSON::ObjectId.from_string(event.entity_id) }.merge(event.attributes) ).to_s
     end

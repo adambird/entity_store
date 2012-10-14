@@ -2,12 +2,6 @@ module EntityStore
   module Entity
     attr_accessor :id
     
-    # Holds a reference to the store used to load this entity so the same store
-    # can be used for related entities
-    attr_writer :related_entity_loader
-
-    attr_writer :version
-
     def self.included(klass)
       klass.class_eval do
         extend ClassMethods
@@ -24,8 +18,8 @@ module EntityStore
 
           # lazy loader for related entity
           define_method(name) {
-            if instance_variable_get("@#{name}_id") && @related_entity_loader
-              instance_variable_get("@_#{name}") || instance_variable_set("@_#{name}", @related_entity_loader.get(instance_variable_get("@#{name}_id")))
+            if instance_variable_get("@#{name}_id") && @_related_entity_loader
+              instance_variable_get("@_#{name}") || instance_variable_set("@_#{name}", @_related_entity_loader.get(instance_variable_get("@#{name}_id")))
             end
           }
         end
@@ -46,9 +40,19 @@ module EntityStore
     end
   
     def version
-      @version ||= 1
+      @_version ||= 1
     end
-  
+
+    def version=(value)
+      @_version = value
+    end
+
+    # Holds a reference to the store used to load this entity so the same store
+    # can be used for related entities
+    def related_entity_loader=(value)
+      @_related_entity_loader = value
+    end
+    
     def pending_events
       @pending_events ||= []
     end

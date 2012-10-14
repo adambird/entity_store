@@ -35,6 +35,14 @@ module EntityStore
       @_event_subscribers ||=[]
     end
     
+    def snapshot_threshold
+      @_snapshot_threshold ||= 10
+    end
+
+    def snapshot_threshold=(value)
+      @_snapshot_threshold = value
+    end
+
     def log_level
       @_log_level ||= Logger::INFO
     end

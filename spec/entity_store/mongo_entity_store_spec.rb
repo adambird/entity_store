@@ -7,6 +7,15 @@ module Level1
   end
 end
 
+module MongoEntityStoreSpec
+  class DummyEntity
+    include Entity
+
+    attr_accessor :name, :description
+
+  end
+end
+
 describe MongoEntityStore do
   before(:each) do
     EntityStore.connection_profile = "mongodb://localhost/entity_store_default"
@@ -43,10 +52,18 @@ describe MongoEntityStore do
 
   describe "#snapshot_entity" do
     before(:each) do
-      
+      @entity = MongoEntityStoreSpec::DummyEntity.new(:id => random_object_id, :version => random_integer, :name => random_string)
     end
-    it "should description" do
-      
+
+    subject { @store.snapshot_entity(@entity) }
+
+    it "should add a snaphot to the entity record" do
+      subject 
+      saved_entity = @store.entities.find_one({'_id' => BSON::ObjectId.from_string(@entity.id)})['snapshot']
+      saved_entity['id'].should eq(@entity.id)
+      saved_entity['version'].should eq(@entity.version)
+      saved_entity['name'].should eq(@entity.name)
+      saved_entity['description'].should eq(@entity.description)
     end
   end
 end
