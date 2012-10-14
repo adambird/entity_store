@@ -1,7 +1,7 @@
 module EntityStore
   class Store
     def storage_client
-      @storage_client || MongoEntityStore.new
+      @_storage_client ||= MongoEntityStore.new
     end
 
     def add(entity)
@@ -64,7 +64,7 @@ module EntityStore
     def clear_all
       storage_client.entities.drop
       storage_client.events.drop
-      @storage_client = nil
+      @_storage_client = nil
     end
 
   end

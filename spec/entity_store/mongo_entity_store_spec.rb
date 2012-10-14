@@ -22,9 +22,6 @@ describe MongoEntityStore do
       end
     end
     context "when valid id format passed but no object exists" do
-      before(:each) do
-        @store = MongoEntityStore.new
-      end
       
       subject { @store.get_entity!(random_object_id) }
       
@@ -41,6 +38,15 @@ describe MongoEntityStore do
     
     it "should be an Level1::Level2::MyClass" do
       subject.should eq(Level1::Level2::MyClass)
+    end
+  end
+
+  describe "#snapshot_entity" do
+    before(:each) do
+      
+    end
+    it "should description" do
+      
     end
   end
 end
