@@ -29,6 +29,7 @@ module EntityStore
 
     def ensure_indexes
       events_collection.ensure_index([['entity_id', Mongo::ASCENDING], ['_id', Mongo::ASCENDING]])
+      events_collection.ensure_index([['entity_id', Mongo::ASCENDING], ['entity_version'], Mongo::ASCENDING], ['_id', Mongo::ASCENDING])
     end
 
     def add_entity(entity)
@@ -55,28 +56,37 @@ module EntityStore
       get_entity(id, true)
     end
 
+    # Public - loads the entity from the store, including any available snapshots
+    # then loads the events to complete the state
+    # 
+    # id                - String representation of BSON::ObjectId
+    # raise_exception   - Boolean indicating whether to raise an exception if not found (default=false)
+    # 
+    # Returns an object of the entity type
     def get_entity(id, raise_exception=false)
-      begin
-        if attrs = entities.find('_id' => BSON::ObjectId.from_string(id)).first
-          get_type_constant(attrs['_type']).new('id' => id, 'version' => attrs['version'])
-        else
-          if raise_exception
-            raise NotFound.new(id)
-          else
-            return nil
-          end
-        end
-      rescue BSON::InvalidObjectId
-        if raise_exception
-          raise NotFound.new(id)
-        else
-          return nil
-        end
+      if attrs = entities.find_one('_id' => BSON::ObjectId.from_string(id))
+        entity = get_type_constant(attrs['_type']).new(attrs['snapshot'] || {'id' => id, 'version' => attrs['version']})
+
+        since_version = attrs['snapshot'] ? attrs['snapshot']['version'] : nil
+
+        get_events(id, since_version).each { |e| e.apply(entity) }
+
+        entity
+      else
+        raise NotFound.new(id) if raise_exception
+        nil
       end
+    rescue BSON::InvalidObjectId
+      raise NotFound.new(id) if raise_exception
+      nil
     end
 
-    def get_events(id)
-      events.find('_entity_id' => BSON::ObjectId.from_string(id)).collect do |attrs|
+    def get_events(id, since_version=nil)
+
+      query = { '_entity_id' => BSON::ObjectId.from_string(id) }
+      query['entity_version'] = { '$gt' => since_version } if since_version
+
+      events.find(query).collect do |attrs|
         begin
           get_type_constant(attrs['_type']).new(attrs)
         rescue => e

@@ -35,6 +35,8 @@ module EntityStore
       @_event_subscribers ||=[]
     end
     
+    # Public - indicates the version increment that is used to 
+    # decided whether a snapshot of an entity should be created when it's saved
     def snapshot_threshold
       @_snapshot_threshold ||= 10
     end

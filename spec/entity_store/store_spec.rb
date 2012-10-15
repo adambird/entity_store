@@ -165,7 +165,6 @@ describe Store do
 
       it "should snapshot the entity" do
         @storage_client.should_receive(:snapshot_entity).with(@entity)
-        puts "Should snapshot"
         subject
       end
     end
@@ -176,7 +175,7 @@ describe Store do
     before(:each) do
       @id = random_integer
       @entity = DummyEntityForStore.new
-      DummyEntityForStore.stub(:new).and_return(@ride)
+      DummyEntityForStore.stub(:new).and_return(@entity)
       @events = [mock("Event", :apply => true), mock("Event", :apply => true)]
 
       @storage_client = mock("StorageClient", :get_entity => @entity, :get_events => @events)
@@ -188,16 +187,6 @@ describe Store do
 
     it "should retrieve object from the storage client" do
       @storage_client.should_receive(:get_entity).with(@id, false)
-      subject
-    end
-    it "should retrieve the events for the entity" do
-      @storage_client.should_receive(:get_events).with(@id)
-      subject
-    end
-    it "should apply each event" do
-      @events.each do |e|
-        e.should_receive(:apply).with(@entity)
-      end
       subject
     end
     it "should assign itself as the related_entity_loader" do
