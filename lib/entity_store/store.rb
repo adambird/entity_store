@@ -25,7 +25,7 @@ module EntityStore
         entity.version += 1
         if entity.id
           storage_client.save_entity(entity)
-          storage_client.snapshot_entity(entity) if entity.version % EntityStore.snapshot_threshold == 0
+          snapshot_entity(entity) if entity.version % EntityStore.snapshot_threshold == 0
         else
           entity.id = storage_client.add_entity(entity)
         end
@@ -35,6 +35,10 @@ module EntityStore
     rescue => e
       EntityStore.logger.error { "Store#do_save error: #{e.inspect} - #{entity.inspect}" }
       raise e
+    end
+
+    def snapshot_entity(entity)
+      storage_client.snapshot_entity(entity)
     end
 
     def add_events(entity)
