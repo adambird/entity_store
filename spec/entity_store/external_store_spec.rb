@@ -94,4 +94,5 @@ describe ExternalStore do
     end
 
   end
+
 end

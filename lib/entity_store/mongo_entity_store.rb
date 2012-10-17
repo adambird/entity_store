@@ -28,7 +28,8 @@ module EntityStore
     end
 
     def ensure_indexes
-      events_collection.ensure_index([['entity_id', Mongo::ASCENDING], ['_id', Mongo::ASCENDING]])
+      events.ensure_index([['entity_id', Mongo::ASCENDING], ['_id', Mongo::ASCENDING]])
+      events.ensure_index([['entity_id', Mongo::ASCENDING], ['entity_version', Mongo::ASCENDING], ['_id', Mongo::ASCENDING]])
     end
 
     def add_entity(entity)
@@ -39,6 +40,20 @@ module EntityStore
       entities.update({'_id' => BSON::ObjectId.from_string(entity.id)}, { '$set' => { 'version' => entity.version } })
     end
 
+    # Public - create a snapshot of the entity and store in the entities collection
+    # 
+    def snapshot_entity(entity)
+      query = {'_id' => BSON::ObjectId.from_string(entity.id)}
+      updates = { '$set' => { 'snapshot' => entity.attributes } }
+      entities.update(query, updates, { :upsert => true} )
+    end
+
+    # Public - remove the snapshot for an entity
+    # 
+    def remove_entity_snapshot(id)
+      entities.update({'_id' => BSON::ObjectId.from_string(id)}, { '$unset' => { 'snapshot' => 1}})
+    end
+
     def add_event(event)
       events.insert({'_type' => event.class.name, '_entity_id' => BSON::ObjectId.from_string(event.entity_id) }.merge(event.attributes) ).to_s
     end
@@ -47,28 +62,44 @@ module EntityStore
       get_entity(id, true)
     end
 
+    # Public - loads the entity from the store, including any available snapshots
+    # then loads the events to complete the state
+    # 
+    # id                - String representation of BSON::ObjectId
+    # raise_exception   - Boolean indicating whether to raise an exception if not found (default=false)
+    # 
+    # Returns an object of the entity type
     def get_entity(id, raise_exception=false)
-      begin
-        if attrs = entities.find('_id' => BSON::ObjectId.from_string(id)).first
-          get_type_constant(attrs['_type']).new('id' => id, 'version' => attrs['version'])
-        else
-          if raise_exception
-            raise NotFound.new(id)
-          else
-            return nil
-          end
+      if attrs = entities.find_one('_id' => BSON::ObjectId.from_string(id))
+        entity = get_type_constant(attrs['_type']).new(attrs['snapshot'] || {'id' => id, 'version' => attrs['version']})
+
+        since_version = attrs['snapshot'] ? attrs['snapshot']['version'] : nil
+
+        get_events(id, since_version).each do |e| 
+          e.apply(entity) 
+          entity.version = e.entity_version
         end
-      rescue BSON::InvalidObjectId
-        if raise_exception
-          raise NotFound.new(id)
-        else
-          return nil
-        end
+
+        entity
+      else
+        raise NotFound.new(id) if raise_exception
+        nil
       end
+    rescue BSON::InvalidObjectId
+      raise NotFound.new(id) if raise_exception
+      nil
     end
 
-    def get_events(id)
-      events.find('_entity_id' => BSON::ObjectId.from_string(id)).collect do |attrs|
+    def get_events(id, since_version=nil)
+
+      query = { '_entity_id' => BSON::ObjectId.from_string(id) }
+      query['entity_version'] = { '$gt' => since_version } if since_version
+
+      options = {
+        :sort => [['entity_version', Mongo::ASCENDING], ['_id', Mongo::ASCENDING]]
+      }
+
+      events.find(query, options).collect do |attrs|
         begin
           get_type_constant(attrs['_type']).new(attrs)
         rescue => e

@@ -9,6 +9,8 @@ module EntityStore
   require 'entity_store/mongo_entity_store'
   require 'entity_store/event_bus'
   require 'entity_store/not_found'
+  require 'entity_store/hash_serialization'
+  require 'entity_store/attributes'
 
   class << self
     def setup
@@ -35,6 +37,16 @@ module EntityStore
       @_event_subscribers ||=[]
     end
     
+    # Public - indicates the version increment that is used to 
+    # decided whether a snapshot of an entity should be created when it's saved
+    def snapshot_threshold
+      @_snapshot_threshold ||= 10
+    end
+
+    def snapshot_threshold=(value)
+      @_snapshot_threshold = value
+    end
+
     def log_level
       @_log_level ||= Logger::INFO
     end
