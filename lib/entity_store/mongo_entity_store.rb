@@ -80,7 +80,6 @@ module EntityStore
             event.apply(entity) 
           rescue => e
             EntityStore.logger.error { "Failed to apply #{event.class.name} #{event.attributes} to #{id} with #{e.inspect}" }
-            raise e
           end
           entity.version = event.entity_version
         end
