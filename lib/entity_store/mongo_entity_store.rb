@@ -4,6 +4,7 @@ require 'uri'
 module EntityStore
   class MongoEntityStore
     include Mongo
+    include Cache
 
     def open_connection
       @db ||= open_store
@@ -73,14 +74,16 @@ module EntityStore
       if attrs = entities.find_one('_id' => BSON::ObjectId.from_string(id))
         entity = get_type_constant(attrs['_type']).new(attrs['snapshot'] || {'id' => id, 'version' => attrs['version']})
 
-        since_version = attrs['snapshot'] ? attrs['snapshot']['version'] : nil
+        cache_fetch(id, entity.version) {
+          since_version = attrs['snapshot'] ? attrs['snapshot']['version'] : nil
 
-        get_events(id, since_version).each do |e| 
-          e.apply(entity) 
-          entity.version = e.entity_version
-        end
+          get_events(id, since_version).each do |e| 
+            e.apply(entity) 
+            entity.version = e.entity_version
+          end
 
-        entity
+          entity
+        }
       else
         raise NotFound.new(id) if raise_exception
         nil
