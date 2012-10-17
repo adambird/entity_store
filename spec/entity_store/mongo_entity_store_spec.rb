@@ -29,7 +29,7 @@ describe MongoEntityStore do
         '_type' => "MongoEntityStoreSpec::DummyEntity", 
         'version' => @version = random_integer
       }
-      @entity = MongoEntityStoreSpec::DummyEntity.new(:id => @id, :version => @version)
+      @entity = MongoEntityStoreSpec::DummyEntity.new
       MongoEntityStoreSpec::DummyEntity.stub(:new) { @entity }
       @entities_collection = mock('MongoCollection', :find_one => @attrs)
       @store.stub(:entities) { @entities_collection }
@@ -61,10 +61,6 @@ describe MongoEntityStore do
       subject
       @entity.version.should eq(@events.last.entity_version)
     end
-    it "should attempt to retrieve from the cache" do
-      @store.should_receive(:cache_fetch).with(@id, @version) { @entity }
-      subject
-    end
     it "should return the entity" do
       subject.should eq(@entity)
     end
@@ -82,15 +78,6 @@ describe MongoEntityStore do
       it "should load the events since the snapshot version" do
          @store.should_receive(:get_events).with(@id, @snapshot_version)
          subject
-      end
-    end
-    context "when item exists in cache" do
-      before(:each) do
-        @another_entity = MongoEntityStoreSpec::DummyEntity.new
-        @store.stub(:cache_fetch) { @another_entity }
-      end
-      it "should reutrn the other entity" do
-        subject.should eq(@another_entity)
       end
     end
   end

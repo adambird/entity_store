@@ -1,6 +1,5 @@
 module EntityStore
   require 'logger'
-  require 'entity_store/cache'
   require 'entity_store/entity'
   require 'entity_store/entity_value'
   require 'entity_store/event'
@@ -17,9 +16,6 @@ module EntityStore
     def setup
       yield self
     end
-    
-    # Public: cache to be used
-    attr_accessor :cache
 
     def connection_profile
       @_connection_profile
