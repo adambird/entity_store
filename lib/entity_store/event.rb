@@ -4,6 +4,7 @@ module EntityStore
 
     def self.included(klass)
       klass.class_eval do
+        include Attributes
         include HashSerialization
         extend ClassMethods
       end

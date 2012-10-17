@@ -29,7 +29,7 @@ module EntityStore
 
     def ensure_indexes
       events.ensure_index([['entity_id', Mongo::ASCENDING], ['_id', Mongo::ASCENDING]])
-      events.ensure_index([['entity_id', Mongo::ASCENDING], ['entity_version', Mongo::ASCENDING], ['_id', Mongo::ASCENDING])
+      events.ensure_index([['entity_id', Mongo::ASCENDING], ['entity_version', Mongo::ASCENDING], ['_id', Mongo::ASCENDING]])
     end
 
     def add_entity(entity)
