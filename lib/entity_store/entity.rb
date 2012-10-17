@@ -55,6 +55,10 @@ module EntityStore
       @pending_events ||= []
     end
   
+    def clear_pending_events
+      @pending_events = []  
+    end
+
     def record_event(event)
       apply_event(event)
       pending_events<<event

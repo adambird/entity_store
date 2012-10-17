@@ -25,11 +25,11 @@ module EntityStore
         entity.version += 1
         if entity.id
           storage_client.save_entity(entity)
-          snapshot_entity(entity) if entity.version % EntityStore.snapshot_threshold == 0
         else
           entity.id = storage_client.add_entity(entity)
         end
         add_events(entity)
+        snapshot_entity(entity) if entity.version % EntityStore.snapshot_threshold == 0
       end
       entity
     rescue => e
@@ -53,6 +53,7 @@ module EntityStore
         storage_client.add_event(e)
       end
       entity.pending_events.each {|e| EventBus.publish(entity.type, e) }
+      entity.clear_pending_events
     end
 
     def get!(id)
