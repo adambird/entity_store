@@ -34,7 +34,7 @@ describe MongoEntityStore do
       @entities_collection = mock('MongoCollection', :find_one => @attrs)
       @store.stub(:entities) { @entities_collection }
       @events = [
-        mock('Event', :apply => true), mock('Event', :apply => true)
+        mock('Event', :apply => true, :entity_version => random_integer), mock('Event', :apply => true, :entity_version => random_integer)
       ]
       @store.stub(:get_events) { @events }
     end
@@ -56,6 +56,10 @@ describe MongoEntityStore do
     it "should apply each event to the entity" do
       @events.each do |event| event.should_receive(:apply).with(@entity) end
       subject
+    end
+    it "should set the entity version to that of the last event" do
+      subject
+      @entity.version.should eq(@events.last.entity_version)
     end
     context "when a snapshot exists" do
       before(:each) do

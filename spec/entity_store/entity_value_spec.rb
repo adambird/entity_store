@@ -32,8 +32,11 @@ describe EntityValue do
     before(:each) do
       @value = DummyEntityValue.new(:name => @name, :home => @home)
     end
-    it "should return hash of attributes" do
-      @value.attributes.should eq({:name => @name, :home => @home})
+
+    subject { @value.attributes }
+
+    it "should return hash of attributes and type" do
+      subject.should eq({:name => @name, :home => @home})
     end
     context "nested attributes" do
       before(:each) do
@@ -42,8 +45,9 @@ describe EntityValue do
         @value.home = NestedEntityValue.new(:street => @street, :town => @town)
       end
       it "should return a hash containing the nested attribute" do
-        @value.attributes.should eq({:name => @name, :home => {:street => @street, :town => @town}})
+        subject.should eq({:name => @name, :home => {:street => @street, :town => @town}})
       end
+
     end
     
   end

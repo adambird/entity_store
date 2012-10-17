@@ -48,6 +48,12 @@ module EntityStore
       entities.update(query, updates, { :upsert => true} )
     end
 
+    # Public - remove the snapshot for an entity
+    # 
+    def remove_entity_snapshot(id)
+      entities.update({'_id' => BSON::ObjectId.from_string(id)}, { '$unset' => { 'snapshot' => 1}})
+    end
+
     def add_event(event)
       events.insert({'_type' => event.class.name, '_entity_id' => BSON::ObjectId.from_string(event.entity_id) }.merge(event.attributes) ).to_s
     end
@@ -69,7 +75,10 @@ module EntityStore
 
         since_version = attrs['snapshot'] ? attrs['snapshot']['version'] : nil
 
-        get_events(id, since_version).each { |e| e.apply(entity) }
+        get_events(id, since_version).each do |e| 
+          e.apply(entity) 
+          entity.version = e.entity_version
+        end
 
         entity
       else

@@ -9,6 +9,8 @@ module EntityStore
   require 'entity_store/mongo_entity_store'
   require 'entity_store/event_bus'
   require 'entity_store/not_found'
+  require 'entity_store/hash_serialization'
+  require 'entity_store/attributes'
 
   class << self
     def setup

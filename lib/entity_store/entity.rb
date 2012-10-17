@@ -4,6 +4,8 @@ module EntityStore
     
     def self.included(klass)
       klass.class_eval do
+        include HashSerialization
+        include Attributes
         extend ClassMethods
       end
     end
@@ -31,10 +33,6 @@ module EntityStore
 
     end
 
-    def initialize(attr={})
-      attr.each_pair { |k,v| self.send("#{k}=", v) }
-    end
-    
     def type
       self.class.name
     end
@@ -66,17 +64,5 @@ module EntityStore
       event.apply(self)
     end
 
-    # Public - generate attributes hash 
-    # did use flatten but this came a-cropper when the attribute value was an array
-    def attributes
-      attrs = {}
-      public_methods.select {|m| m =~ /\w\=$/}.select{ |m| respond_to?(m.to_s.chop.to_sym) }.collect do |m|
-        attribute_name = m.to_s.chop.to_sym
-        [attribute_name, send(attribute_name).respond_to?(:attributes) ? send(attribute_name).attributes : send(attribute_name)]
-      end.each do |item|
-        attrs[item[0]] = item[1]
-      end
-      attrs
-    end
   end
 end
