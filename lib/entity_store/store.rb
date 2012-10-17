@@ -38,6 +38,7 @@ module EntityStore
     end
 
     def snapshot_entity(entity)
+      EntityStore.logger.info { "Store#snapshot_entity : Snapshotting #{entity.id}"}
       storage_client.snapshot_entity(entity)
     end
 

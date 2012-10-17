@@ -28,8 +28,8 @@ module EntityStore
     end
 
     def ensure_indexes
-      events_collection.ensure_index([['entity_id', Mongo::ASCENDING], ['_id', Mongo::ASCENDING]])
-      events_collection.ensure_index([['entity_id', Mongo::ASCENDING], ['entity_version'], Mongo::ASCENDING], ['_id', Mongo::ASCENDING])
+      events.ensure_index([['entity_id', Mongo::ASCENDING], ['_id', Mongo::ASCENDING]])
+      events.ensure_index([['entity_id', Mongo::ASCENDING], ['entity_version', Mongo::ASCENDING], ['_id', Mongo::ASCENDING])
     end
 
     def add_entity(entity)
@@ -95,7 +95,11 @@ module EntityStore
       query = { '_entity_id' => BSON::ObjectId.from_string(id) }
       query['entity_version'] = { '$gt' => since_version } if since_version
 
-      events.find(query).collect do |attrs|
+      options = {
+        :sort => [['entity_version', Mongo::ASCENDING], ['_id', Mongo::ASCENDING]]
+      }
+
+      events.find(query, options).collect do |attrs|
         begin
           get_type_constant(attrs['_type']).new(attrs)
         rescue => e
