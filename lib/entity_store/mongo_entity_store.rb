@@ -75,9 +75,14 @@ module EntityStore
 
         since_version = attrs['snapshot'] ? attrs['snapshot']['version'] : nil
 
-        get_events(id, since_version).each do |e| 
-          e.apply(entity) 
-          entity.version = e.entity_version
+        get_events(id, since_version).each do |event| 
+          begin
+            event.apply(entity) 
+          rescue => e
+            EntityStore.logger.error ("Failed to apply #{event.class.name} #{e.attributes} to #{id}")
+            raise e
+          end
+          entity.version = event.entity_version
         end
 
         entity
