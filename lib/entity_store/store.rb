@@ -1,7 +1,7 @@
 module EntityStore
   class Store
     def storage_client
-      @storage_client || MongoEntityStore.new
+      @_storage_client ||= MongoEntityStore.new
     end
 
     def add(entity)
@@ -29,11 +29,21 @@ module EntityStore
           entity.id = storage_client.add_entity(entity)
         end
         add_events(entity)
+        snapshot_entity(entity) if entity.version % EntityStore.snapshot_threshold == 0
       end
       entity
     rescue => e
       EntityStore.logger.error { "Store#do_save error: #{e.inspect} - #{entity.inspect}" }
       raise e
+    end
+
+    def snapshot_entity(entity)
+      EntityStore.logger.info { "Store#snapshot_entity : Snapshotting #{entity.id}"}
+      storage_client.snapshot_entity(entity)
+    end
+
+    def remove_entity_snapshot(id)
+      storage_client.remove_entity_snapshot(id)
     end
 
     def add_events(entity)
@@ -43,6 +53,7 @@ module EntityStore
         storage_client.add_event(e)
       end
       entity.pending_events.each {|e| EventBus.publish(entity.type, e) }
+      entity.clear_pending_events
     end
 
     def get!(id)
@@ -51,7 +62,6 @@ module EntityStore
 
     def get(id, raise_exception=false)
       if entity = storage_client.get_entity(id, raise_exception)
-        storage_client.get_events(id).each { |e| e.apply(entity) }
         # assign this entity loader to allow lazy loading of related entities
         entity.related_entity_loader = self
       end
@@ -64,7 +74,7 @@ module EntityStore
     def clear_all
       storage_client.entities.drop
       storage_client.events.drop
-      @storage_client = nil
+      @_storage_client = nil
     end
 
   end

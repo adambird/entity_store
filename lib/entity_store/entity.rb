@@ -2,14 +2,10 @@ module EntityStore
   module Entity
     attr_accessor :id
     
-    # Holds a reference to the store used to load this entity so the same store
-    # can be used for related entities
-    attr_accessor :related_entity_loader
-
-    attr_writer :version
-
     def self.included(klass)
       klass.class_eval do
+        include HashSerialization
+        include Attributes
         extend ClassMethods
       end
     end
@@ -24,8 +20,8 @@ module EntityStore
 
           # lazy loader for related entity
           define_method(name) {
-            if instance_variable_get("@#{name}_id") && related_entity_loader
-              instance_variable_get("@_#{name}") || instance_variable_set("@_#{name}", related_entity_loader.get(instance_variable_get("@#{name}_id")))
+            if instance_variable_get("@#{name}_id") && @_related_entity_loader
+              instance_variable_get("@_#{name}") || instance_variable_set("@_#{name}", @_related_entity_loader.get(instance_variable_get("@#{name}_id")))
             end
           }
         end
@@ -37,22 +33,32 @@ module EntityStore
 
     end
 
-    def initialize(attr={})
-      attr.each_pair { |k,v| self.send("#{k}=", v) }
-    end
-    
     def type
       self.class.name
     end
   
     def version
-      @version ||= 1
+      @_version ||= 1
     end
-  
+
+    def version=(value)
+      @_version = value
+    end
+
+    # Holds a reference to the store used to load this entity so the same store
+    # can be used for related entities
+    def related_entity_loader=(value)
+      @_related_entity_loader = value
+    end
+    
     def pending_events
       @pending_events ||= []
     end
   
+    def clear_pending_events
+      @pending_events = []  
+    end
+
     def record_event(event)
       apply_event(event)
       pending_events<<event
@@ -61,5 +67,6 @@ module EntityStore
     def apply_event(event)
       event.apply(self)
     end
+
   end
 end

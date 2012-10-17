@@ -5,6 +5,8 @@ class DummyEntity
 
   related_entities :club, :user
 
+  attr_accessor :name, :description, :members
+
 end
 
 describe Entity do
@@ -64,6 +66,20 @@ describe Entity do
       it "should only have user in the loaded related entities collection" do
         @entity.loaded_related_entities.should eq([@club, @user])
       end
+    end
+  end
+
+  describe "#attributes" do
+    before(:each) do
+      @entity = DummyEntity.new(:id => @id = random_object_id, :club_id => @club_id = random_string, 
+        :user_id => @user_id = random_string, :name => @name = random_string, :version => @version = random_integer,
+        :members => [])
+    end
+
+    subject { @entity.attributes }
+
+    it "returns a hash of the attributes" do
+      subject.should eq({:id => @id, :version => @version, :name => @name, :club_id => @club_id, :user_id => @user_id, :description => nil, :members => []})
     end
   end
 end

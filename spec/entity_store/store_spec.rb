@@ -79,6 +79,7 @@ describe Store do
     context "when entity has related entities loaded" do
       before(:each) do
         @entity = DummyEntityForStore.new(:id => random_string)
+        @entity.version = random_integer * EntityStore.snapshot_threshold + 1
         @store = Store.new
         @related_entity = mock('Entity')
         @entity.stub(:loaded_related_entities) { [ @related_entity ] }
@@ -96,13 +97,13 @@ describe Store do
         subject
       end
     end
-
   end
 
   describe "#do_save" do
     before(:each) do
       @new_id = random_string
       @entity = DummyEntityForStore.new(:id => random_string)
+      @entity.version = random_integer * EntityStore.snapshot_threshold
       @storage_client = mock("StorageClient", :save_entity => true)
       @store = Store.new
       @store.stub(:add_events)
@@ -113,8 +114,7 @@ describe Store do
     subject { @store.do_save(@entity) }
 
     it "increments the entity version number" do
-      @entity.should_receive(:version=).with(@entity.version + 1)
-      subject
+      expect { subject }.to change { @entity.version }.by 1
     end
     it "save the new entity to the store" do
       @storage_client.should_receive(:save_entity).with(@entity)
@@ -127,6 +127,11 @@ describe Store do
     it "returns a reference to the entity" do
       subject.should eq(@entity)
     end
+    it "should not snapshot the entity" do
+      @store.should_not_receive(:snapshot_entity)
+      subject
+    end
+
     context "when no pending events" do
       before(:each) do
         @entity.stub(:pending_events) { [] }
@@ -140,6 +145,7 @@ describe Store do
         subject
       end
     end
+
     context "when entity doesn't have an id" do
       before(:each) do
         @entity.id = nil
@@ -151,13 +157,25 @@ describe Store do
         subject
       end
     end
+
+    context "when entity version is commensurate with snapshotting" do
+      before(:each) do
+        @entity.version = random_integer * EntityStore.snapshot_threshold - 1
+      end
+
+      it "should snapshot the entity" do
+        @storage_client.should_receive(:snapshot_entity).with(@entity)
+        subject
+      end
+    end
+
   end
 
   describe "#get" do
     before(:each) do
       @id = random_integer
       @entity = DummyEntityForStore.new
-      DummyEntityForStore.stub(:new).and_return(@ride)
+      DummyEntityForStore.stub(:new).and_return(@entity)
       @events = [mock("Event", :apply => true), mock("Event", :apply => true)]
 
       @storage_client = mock("StorageClient", :get_entity => @entity, :get_events => @events)
@@ -171,18 +189,9 @@ describe Store do
       @storage_client.should_receive(:get_entity).with(@id, false)
       subject
     end
-    it "should retrieve the events for the entity" do
-      @storage_client.should_receive(:get_events).with(@id)
-      subject
-    end
-    it "should apply each event" do
-      @events.each do |e|
-        e.should_receive(:apply).with(@entity)
-      end
-      subject
-    end
     it "should assign itself as the related_entity_loader" do
-      subject.related_entity_loader.should eq(@store)
+      @entity.should_receive(:related_entity_loader=).with(@store)
+      subject
     end
     it "should return a ride" do
       subject.should eq(@entity)
