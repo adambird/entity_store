@@ -1,9 +1,11 @@
 require 'mongo'
 require 'uri'
+require 'json'
 
 module EntityStore
   class MongoEntityStore
     include Mongo
+    include Cache
 
     def open_connection
       @db ||= open_store
@@ -71,20 +73,25 @@ module EntityStore
     # Returns an object of the entity type
     def get_entity(id, raise_exception=false)
       if attrs = entities.find_one('_id' => BSON::ObjectId.from_string(id))
-        entity = get_type_constant(attrs['_type']).new(attrs['snapshot'] || {'id' => id, 'version' => attrs['version']})
 
-        since_version = attrs['snapshot'] ? attrs['snapshot']['version'] : nil
+        get_type_constant(attrs['_type']).new(
+          JSON.parse(cache_fetch(id, attrs['version']) {
+            entity = get_type_constant(attrs['_type']).new(attrs['snapshot'] || {'id' => id, 'version' => attrs['version']})
 
-        get_events(id, since_version).each do |event| 
-          begin
-            event.apply(entity) 
-          rescue => e
-            EntityStore.logger.error { "Failed to apply #{event.class.name} #{event.attributes} to #{id} with #{e.inspect}" }
-          end
-          entity.version = event.entity_version
-        end
+            since_version = attrs['snapshot'] ? attrs['snapshot']['version'] : nil
 
-        entity
+            get_events(id, since_version).each do |event| 
+              begin
+                event.apply(entity) 
+              rescue => e
+                EntityStore.logger.error { "Failed to apply #{event.class.name} #{event.attributes} to #{id} with #{e.inspect}" }
+              end
+              entity.version = event.entity_version
+            end
+
+            entity.attributes.to_json
+          })
+        )
       else
         raise NotFound.new(id) if raise_exception
         nil

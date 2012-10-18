@@ -3,6 +3,7 @@ module EntityStore
   require 'entity_store/entity'
   require 'entity_store/entity_value'
   require 'entity_store/event'
+  require 'entity_store/cache'
   require 'entity_store/store'
   require 'entity_store/external_store'
   require 'entity_store/event_data_object'
@@ -17,6 +18,8 @@ module EntityStore
       yield self
     end
 
+    attr_accessor :cache
+    
     def connection_profile
       @_connection_profile
     end
