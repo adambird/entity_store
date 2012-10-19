@@ -2,7 +2,7 @@ module EntityStore
   module HashSerialization
 
     def initialize(attr={})
-      attr.each_pair { |k,v| send("#{k}=", v) if respond_to?("#{k}=") }
+      attr.each { |item| send("#{item[0]}=", item[1]) if respond_to?("#{item[0]}=") }
     end
 
     # Public - generate attributes hash 
