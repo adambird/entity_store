@@ -21,7 +21,9 @@ module EntityStore
     def attribute_value(value)
       if value.respond_to?(:attributes)
         value.attributes
-      elsif value.respond_to?(:each)
+      elsif value.is_a?(Hash)
+        value
+      elsif value.is_a?(Array)
         value.collect { |v| attribute_value(v) }
       else
         value
