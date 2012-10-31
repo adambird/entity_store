@@ -11,7 +11,7 @@ module EntityStore
 
     def open_store
       uri  = URI.parse(EntityStore.connection_profile)
-      connection = Connection.from_uri(EntityStore.connection_profile, :connect_timeout => connect_timeout)
+      connection = Connection.from_uri(EntityStore.connection_profile, :connect_timeout => connect_timeout, :safe => true)
       connection.db(uri.path.gsub(/^\//, ''))
     end
 
@@ -28,8 +28,8 @@ module EntityStore
     end
 
     def ensure_indexes
-      events.ensure_index([['entity_id', Mongo::ASCENDING], ['_id', Mongo::ASCENDING]])
-      events.ensure_index([['entity_id', Mongo::ASCENDING], ['entity_version', Mongo::ASCENDING], ['_id', Mongo::ASCENDING]])
+      events.ensure_index([['_entity_id', Mongo::ASCENDING], ['_id', Mongo::ASCENDING]])
+      events.ensure_index([['_entity_id', Mongo::ASCENDING], ['entity_version', Mongo::ASCENDING], ['_id', Mongo::ASCENDING]])
     end
 
     def add_entity(entity)
