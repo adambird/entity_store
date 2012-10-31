@@ -22,7 +22,9 @@ module EntityStore
       if value.respond_to?(:attributes)
         value.attributes
       elsif value.is_a?(Hash)
-        value
+        h = {}
+        value.each_pair do |k,v| h[k] = attribute_value(v) end
+        h
       elsif value.is_a?(Array)
         value.collect { |v| attribute_value(v) }
       else
