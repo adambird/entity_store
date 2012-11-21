@@ -1,7 +1,5 @@
 # Entity Store
 
-[![Build Status](https://secure.travis-ci.org/adambird/entity_store.png?branch=master)](http://travis-ci.org/adambird/entity_store)
-
 Event sourced entity store implementation using MongoDB as a back end. Split out of Bunch project in order to be shared with others.
 
 # Usage
