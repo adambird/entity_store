@@ -1,5 +1,6 @@
 module EntityStore
-  require 'logger'
+
+  require 'hatchet'
   require 'entity_store/entity'
   require 'entity_store/entity_value'
   require 'entity_store/event'
@@ -47,26 +48,6 @@ module EntityStore
       @_snapshot_threshold = value
     end
 
-    def log_level
-      @_log_level ||= Logger::INFO
-    end
-    
-    def log_level=(value)
-      @_log_level = value
-    end
-    
-    def logger
-      unless @_logger
-        @_logger = Logger.new(STDOUT)
-        @_logger.progname = "Entity_Store"
-        @_logger.level = log_level
-      end
-      @_logger
-    end
-    
-    def logger=(value)
-      @_logger = value
-    end
   end
 
 

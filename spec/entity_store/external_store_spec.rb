@@ -36,63 +36,89 @@ describe ExternalStore do
   
   describe "#get_events" do
     before(:each) do
-      @entity_type = random_string
-      @events = [
-        DummyEvent.new(:name => random_string, :entity_id => random_object_id),
-        DummyEventTwo.new(:name => random_string, :entity_id => random_object_id),
-        DummyEvent.new(:name => random_string, :entity_id => random_object_id),
-        DummyEventTwo.new(:name => random_string, :entity_id => random_object_id),
-        DummyEvent.new(:name => random_string, :entity_id => random_object_id)
-      ]
-      
-      @events.each { |e| @store.add_event(@entity_type, e)}
+      @reference_time = Time.now
+      @ids = (-2..2).collect { |i| BSON::ObjectId.from_time(@reference_time + i) }
+
+      @store.collection.insert({'_id' => @ids[0], '_type' => 'DummyEvent'})
+      @store.collection.insert({'_id' => @ids[1], '_type' => 'DummyEventTwo'})
+      @store.collection.insert({'_id' => @ids[2], '_type' => 'DummyEvent'})
+      @store.collection.insert({'_id' => @ids[3], '_type' => 'DummyEventTwo'})
+      @store.collection.insert({'_id' => @ids[4], '_type' => 'DummyEvent'})
     end
-    
-    context "when no options" do
+       
+    subject { @store.get_events @since, @type }
 
-      subject { @store.get_events }
-
-      it "returns all of the events" do
-        subject.count.should eq(@events.count)
+    context "when time passed as since" do
+      before(:each) do
+        @since = @reference_time
       end
-    end
-    
-    context "when options passed" do
-      subject { @store.get_events(@options) }
-      
-      context "when limit option passed" do
+      context "when no type filter" do
         before(:each) do
-          @options = {:limit => 3}
+          @type = nil
+          @results = subject
         end
-        
-        it "returns limited records records" do
-          subject.count.should eq(@options[:limit])
+        it "returns two records" do
+          @results.count.should eq(2)
+        end
+        it "it returns the 4th item first" do
+          @results.first.id.should eq(@ids[3].to_s)
+        end
+        it "it returns the 5th item second" do
+          @results[1].id.should eq(@ids[4].to_s)
         end
       end
-      
-      context "when after index passed" do
+      context "when type filter 'DummyEventTwo' passed" do
         before(:each) do
-          items = @store.get_events(:limit => 3)
-          @options = {:after => items[2].id}
+          @type = "DummyEventTwo"
+          @results = subject
         end
-        
-        it "returns limited records records" do
-          subject.count.should eq(2)
+        it "returns 1 record" do
+          @results.count.should eq(1)
         end
-      end  
-      
-      context "when type passed" do
-        before(:each) do
-          @options = {:type => @events[2].class.name}
+        it "returns the 4th item" do
+          @results.first.id.should eq(@ids[3].to_s)
         end
-        
-        it "returns type records records" do
-          subject.count.should eq(3)
-        end
-      end      
-          
+      end
     end
 
+    context "when id passed as since" do
+      before(:each) do
+        @since = @ids[1].to_s
+      end
+      context "when no type filter passed" do
+        before(:each) do
+          @type = nil
+          @results = subject
+        end
+        it "returns 3 records" do
+          @results.count.should eq(3)
+        end
+        it "it returns the 3rd item first" do
+          @results.first.id.should eq(@ids[2].to_s)
+        end
+        it "it returns the 4th item second" do
+          @results[1].id.should eq(@ids[3].to_s)
+        end
+        it "it returns the 5th item second" do
+          @results[2].id.should eq(@ids[4].to_s)
+        end
+      end
+      context "when type filter 'DummyEvent' passed" do
+        before(:each) do
+          @type = "DummyEvent"
+          @results = subject
+        end
+        it "returns 2 records" do
+          @results.count.should eq(2)
+        end
+        it "returns the 3rd item" do
+          @results.first.id.should eq(@ids[2].to_s)
+        end
+        it "returns the 5th item" do
+          @results[1].id.should eq(@ids[4].to_s)
+        end
+      end
+    end
   end
 
 end

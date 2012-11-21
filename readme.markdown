@@ -76,6 +76,17 @@ The EntityValue module provides extensions to support complex objects as values 
 		
 You'll note that a class method `entity_value_attribute` is used to mark up the corresponding event correctly. Slightly uncomfortable that this isn't a poro (plain old ruby object) class. Will investigate this later.
 
+## Replay
+
+Replaying of specific events to specific subscribers is possible via the `EventBus`. This will pull and apply the matching events from the `external_event_store` in the order they were inserted.
+
+```ruby
+EventBus.new.replay Time.new(2011, 11, 1), 'EventTypeName', SubscriberClass
+```
+
+The first argument is the Time from which you wish to find events from.
+
+
 ## Configuration
 
 An initialiser file should contain something similar to this
@@ -90,5 +101,4 @@ An initialiser file should contain something similar to this
 + Concurrency - actually do something with the version of the entity
 + Backup - make copy of all events to external store
 + Restore - restore all backed up events
-+ Replay - make it easy to replay events to new subscribers
 		

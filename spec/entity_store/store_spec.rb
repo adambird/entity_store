@@ -43,7 +43,8 @@ describe Store do
       @storage_client = mock("StorageClient", :add_event => true)
       @store = Store.new
       @store.stub(:storage_client) { @storage_client }
-      EventBus.stub(:publish)
+      @event_bus = mock(EventBus, :publish => true)
+      @store.stub(:event_bus) { @event_bus}
     end
 
     subject { @store.add_events(@entity) }
@@ -68,7 +69,7 @@ describe Store do
     end
     it "publishes each event to the EventBus" do
       @entity.pending_events.each do |e|
-        EventBus.should_receive(:publish).with(@entity.type, e)
+        @event_bus.should_receive(:publish).with(@entity.type, e)
       end
       subject
     end

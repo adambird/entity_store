@@ -4,6 +4,7 @@ require 'uri'
 module EntityStore
   class MongoEntityStore
     include Mongo
+    include Hatchet
 
     def open_connection
       @db ||= open_store
@@ -79,7 +80,7 @@ module EntityStore
           begin
             event.apply(entity) 
           rescue => e
-            EntityStore.logger.error { "Failed to apply #{event.class.name} #{event.attributes} to #{id} with #{e.inspect}" }
+            logger.error "Failed to apply #{event.class.name} #{event.attributes} to #{id} with #{e.inspect}", e
           end
           entity.version = event.entity_version
         end
@@ -107,8 +108,7 @@ module EntityStore
         begin
           get_type_constant(attrs['_type']).new(attrs)
         rescue => e
-          logger = Logger.new(STDERR)
-          logger.error "Error loading type #{attrs['_type']}"
+          logger.error "Error loading type #{attrs['_type']}", e
           nil
         end
       end.select { |e| !e.nil? }

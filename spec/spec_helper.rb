@@ -6,6 +6,18 @@ RSpec.configure do |config|
   config.color_enabled = true
 end
 
+Hatchet.configure do |config|
+  # Reset the logging configuration
+  config.reset!
+  config.level :error
+  # Use the format without time, etc so we don't duplicate it
+  config.formatter = Hatchet::SimpleFormatter.new
+  # Set up a STDOUT appender
+  config.appenders << Hatchet::LoggerAppender.new do |appender|
+    appender.logger = Logger.new(STDOUT)
+  end
+end
+
 include EntityStore
 
 def random_string

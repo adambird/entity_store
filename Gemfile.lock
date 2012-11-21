@@ -12,6 +12,7 @@ GEM
     guard-rspec (2.1.0)
       guard (>= 1.1)
       rspec (~> 2.11)
+    hatchet (0.0.20)
     listen (0.5.3)
     mongo (1.7.0)
       bson (~> 1.7.0)
@@ -34,6 +35,7 @@ DEPENDENCIES
   bson_ext
   growl
   guard-rspec
+  hatchet
   mongo
   rake
   rb-fsevent (~> 0.9.1)
