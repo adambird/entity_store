@@ -1,5 +1,7 @@
 module EntityStore
   class Store
+    include Hatchet
+
     def storage_client
       @_storage_client ||= MongoEntityStore.new
     end
@@ -9,7 +11,7 @@ module EntityStore
       add_events(entity)
       entity
     rescue => e
-      EntityStore.logger.error { "Store#add error: #{e.inspect} - #{entity.inspect}" }
+      logger.error { "Store#add error: #{e.inspect} - #{entity.inspect}" }
       raise e
     end
 
@@ -33,12 +35,12 @@ module EntityStore
       end
       entity
     rescue => e
-      EntityStore.logger.error { "Store#do_save error: #{e.inspect} - #{entity.inspect}" }
+      logger.error { "Store#do_save error: #{e.inspect} - #{entity.inspect}" }
       raise e
     end
 
     def snapshot_entity(entity)
-      EntityStore.logger.info { "Store#snapshot_entity : Snapshotting #{entity.id}"}
+      logger.info { "Store#snapshot_entity : Snapshotting #{entity.id}"}
       storage_client.snapshot_entity(entity)
     end
 
@@ -52,7 +54,7 @@ module EntityStore
         e.entity_version = entity.version
         storage_client.add_event(e)
       end
-      entity.pending_events.each {|e| EventBus.publish(entity.type, e) }
+      entity.pending_events.each {|e| event_bus.publish(entity.type, e) }
       entity.clear_pending_events
     end
 
@@ -77,5 +79,8 @@ module EntityStore
       @_storage_client = nil
     end
 
+    def event_bus
+      @_event_bus ||= EventBus.new
+    end
   end
 end
