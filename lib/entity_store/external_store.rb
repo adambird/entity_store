@@ -29,13 +29,23 @@ module EntityStore
       )
     end
     
-    def get_events(opts={})
-      query = {}
-      query['_id'] = { '$gt' => opts[:after] } if opts[:after]
-      query['_type'] = opts[:type] if opts[:type]
+    # Public - get events since a Time or ID
+    # 
+    # since         - Time or String id to filter events from 
+    # type          - String optionally filter the event type to return (default=nil)
+    # max_items     - Fixnum max items to return (default=100)
+    # 
+    # Returns Enumerable EventDataObject
+    def get_events(since, type=nil, max_items=100)
+      since_id = since.is_a?(Time) ? BSON::ObjectId.from_time(since) : BSON::ObjectId.from_string(since)
+
+      query = { '_id' => { '$gt' => since_id } }
+      query['_type'] = type if type
       
-      options = {:sort => [['_id', -1]]}
-      options[:limit] = opts[:limit] || 100
+      options = {
+        :sort => [['_id', Mongo::ASCENDING]],
+        :limit => max_items
+      }
       
       collection.find(query, options).collect { |e| EventDataObject.new(e)}
     end

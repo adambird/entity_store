@@ -7,7 +7,7 @@ module EntityStore
     end
     
     def id
-      attrs['_id']
+      attrs['_id'].to_s
     end
     
     def entity_type
