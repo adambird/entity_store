@@ -79,6 +79,7 @@ module EntityStore
         get_events(id, since_version).each do |event| 
           begin
             event.apply(entity) 
+            logger.debug { "Applied #{event.inspect} to #{id}" }
           rescue => e
             logger.error "Failed to apply #{event.class.name} #{event.attributes} to #{id} with #{e.inspect}", e
           end
