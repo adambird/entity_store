@@ -55,4 +55,31 @@ describe EventBus do
       subject
     end
   end
+
+  describe "#replay" do
+    before(:each) do
+      @since = random_time
+      @type = 'DummyEvent'
+      @subscriber = mock("Subscriber", :dummy_event => true)
+      DummySubscriber.stub(:new) { @subscriber }
+
+      @external_store = mock(ExternalStore)
+      @id = random_object_id
+      @external_store.stub(:get_events) { |since| since == @id ? [] : [
+        EventDataObject.new('_id' => @id, '_type' => DummyEvent.name, 'name' => random_string) 
+      ]}
+      @event_bus.stub(:external_store) { @external_store }
+    end 
+
+    subject { @event_bus.replay(@since, @type, DummySubscriber) }
+
+    it "gets the events for that period" do
+      @external_store.should_receive(:get_events).with(@since, @type, 100)
+      subject
+    end
+    it "publishes them to the subscriber" do
+      @subscriber.should_receive(:dummy_event).with(an_instance_of(DummyEvent))
+      subject
+    end
+  end
 end
