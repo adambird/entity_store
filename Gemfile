@@ -4,6 +4,7 @@ gem 'rake'
 
 gem 'mongo'
 gem 'bson_ext'
+gem 'hatchet'
 
 group :development, :test do
   gem 'rspec'
