@@ -10,7 +10,7 @@ Rather than directly changing properties of an entity via setter methods, state 
 
 A typical entity would look like this
 
-``ruby
+```ruby
 class Tyre
 	include EntityStore::Entity
 
