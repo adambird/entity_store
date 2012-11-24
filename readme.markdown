@@ -72,7 +72,8 @@ end
 class Member
 	include EntityStore::Entity
 	
-	attr_accessor :first_name, :last_name, :home_address
+	attr_accessor :first_name, :last_name
+	entity_value_attribute :home_address, Address
 
 	def set_home_address(address)
 		record_event(HomeAddressSet.new(:home_address => address))
@@ -80,7 +81,13 @@ class Member
 end
 ```
 
-You'll note that a class method `entity_value_attribute` is used to mark up the corresponding event correctly. Slightly uncomfortable that this isn't a poro (plain old ruby object) class. Will investigate this later.
+You'll note that a class method `entity_value_attribute` is used to mark up the entity and event correctly. Slightly uncomfortable that this isn't a poro (plain old ruby object) class. This is my solution to robust serialisation of these objects. There could well be a better way.
+
+## Snapshotting
+
+Each time an entity is saved, it's version is incremented.
+
+You can specify a `snapshot_threshold` while configuring the gem. This will cause a snapshot to be created and attached to the entity record. When an entity is retrieved from the data store, only events post the snapshot version will be retrieved and applied to the entity.
 
 ## Replay
 
