@@ -72,7 +72,7 @@ module EntityStore
     # Returns an object of the entity type
     def get_entity(id, raise_exception=false)
       if attrs = entities.find_one('_id' => BSON::ObjectId.from_string(id))
-        entity = get_type_constant(attrs['_type']).new(attrs['snapshot'] || {'id' => id, 'version' => attrs['version']})
+        entity = EntityStore.load_type(attrs['_type']).new(attrs['snapshot'] || {'id' => id, 'version' => attrs['version']})
 
         since_version = attrs['snapshot'] ? attrs['snapshot']['version'] : nil
 
@@ -107,7 +107,7 @@ module EntityStore
 
       events.find(query, options).collect do |attrs|
         begin
-          get_type_constant(attrs['_type']).new(attrs)
+          EntityStore.load_type(attrs['_type']).new(attrs)
         rescue => e
           logger.error "Error loading type #{attrs['_type']}", e
           nil
@@ -115,8 +115,8 @@ module EntityStore
       end.select { |e| !e.nil? }
     end
 
-    def get_type_constant(type_name)
-      type_name.split('::').inject(Object) {|obj, name| obj.const_get(name) }
-    end
+    # def get_type_constant(type_name)
+    #   type_name.split('::').inject(Object) {|obj, name| obj.const_get(name) }
+    # end
   end
 end

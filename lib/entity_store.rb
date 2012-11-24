@@ -14,6 +14,7 @@ module EntityStore
   require 'entity_store/attributes'
 
   class << self
+
     def setup
       yield self
     end
@@ -48,6 +49,19 @@ module EntityStore
       @_snapshot_threshold = value
     end
 
+    # Allows config to pass in a lambda or Proc to use as the type loader in place
+    # of the default. 
+    # Original use case was migration of entity classes to new module namespace when 
+    # extracting to a shared library
+    attr_accessor :type_loader
+    
+    def load_type(type_name)
+      if type_loader
+        type_loader.call(type_name)
+      else
+        type_name.split('::').inject(Object) {|obj, name| obj.const_get(name) }
+      end
+    end
   end
 
 

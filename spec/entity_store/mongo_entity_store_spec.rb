@@ -1,12 +1,5 @@
 require 'spec_helper'
 
-module Level1
-  module Level2
-    class MyClass
-    end
-  end
-end
-
 module MongoEntityStoreSpec
   class DummyEntity
     include Entity
@@ -103,15 +96,6 @@ describe MongoEntityStore do
     
   end
   
-  describe "get_type_constant" do
-    
-    subject { @store.get_type_constant('Level1::Level2::MyClass') }
-    
-    it "should be an Level1::Level2::MyClass" do
-      subject.should eq(Level1::Level2::MyClass)
-    end
-  end
-
   describe "#snapshot_entity" do
     before(:each) do
       @entity = MongoEntityStoreSpec::DummyEntity.new(:id => random_object_id, :version => random_integer, :name => random_string)
