@@ -10,27 +10,31 @@ Rather than directly changing properties of an entity via setter methods, state 
 
 A typical entity would look like this
 
-	class Tyre
-		include EntityStore::Entity
+``ruby
+class Tyre
+	include EntityStore::Entity
 
-		attr_accessor :pressure
+	attr_accessor :pressure
 
-		def inflate(new_pressure)
-			record_event(TyreInflated.new(new_pressure))
-		end
+	def inflate(new_pressure)
+		record_event(TyreInflated.new(new_pressure))
 	end
+end
+```
 
 The corresponding event would look like this
 
-	class TyreInflated
-		include EntityStore::Event
+```ruby
+class TyreInflated
+	include EntityStore::Event
 
-		attr_accessor :new_pressure
+	attr_accessor :new_pressure
 
-		def apply(entity)
-			entity.pressure = new_pressure
-		end
+	def apply(entity)
+		entity.pressure = new_pressure
 	end
+end
+```
 
 The `record_event` method adds the event to the entity's `pending_events` queue and applies the event. 
 
@@ -48,32 +52,34 @@ eg: a `TyreInflated` event is received by a `tyre_inflated` method.
 
 The EntityValue module provides extensions to support complex objects as values on attributes. For example.
 
-	class Address
-		include EntityStore::EntityValue
-		
-		attr_accessor :street, :town, :county, :post_code, :country
-	end
+```ruby
+class Address
+	include EntityStore::EntityValue
 	
-	class HomeAddressSet
-		include EntityStore::Event
-		
-		entity_value_attribute :home_address, Address
-		
-		def	apply(entity)
-			entity.home_address = home_address
-		end
-	end
+	attr_accessor :street, :town, :county, :post_code, :country
+end
+
+class HomeAddressSet
+	include EntityStore::Event
 	
-	class Member
-		include EntityStore::Entity
-		
-		attr_accessor :first_name, :last_name, :home_address
+	entity_value_attribute :home_address, Address
 	
-		def set_home_address(address)
-			record_event(HomeAddressSet.new(:home_address => address))
-		end
+	def	apply(entity)
+		entity.home_address = home_address
 	end
-		
+end
+
+class Member
+	include EntityStore::Entity
+	
+	attr_accessor :first_name, :last_name, :home_address
+
+	def set_home_address(address)
+		record_event(HomeAddressSet.new(:home_address => address))
+	end
+end
+```
+
 You'll note that a class method `entity_value_attribute` is used to mark up the corresponding event correctly. Slightly uncomfortable that this isn't a poro (plain old ruby object) class. Will investigate this later.
 
 ## Replay
@@ -91,10 +97,24 @@ The first argument is the Time from which you wish to find events from.
 
 An initialiser file should contain something similar to this
 
-	EntityStore.setup do |config|
-  	config.connection_profile = "mongodb://localhost/my_cars_#{Rails.env}"
-		config.event_subscribers.concat([CarDenormaliser, CarSafetyService])
-	end
+```ruby
+EntityStore.setup do |config|
+	config.connection_profile = ENV['MONGO_URL'] || "mongodb://localhost/my_cars_#{Rails.env}"
+	config.event_subscribers.concat([CarDenormaliser, CarSafetyService])
+end
+```
+
+You can also override the type loader used by passing a lambda or a Proc. Handy if, as in my case, you moved the entity classes to a new module namespace.
+
+``` ruby
+  config.type_loader = lambda {|type_name|
+    begin 
+      type_name.split('::').inject(Object) {|obj, name| obj.const_get(name) }
+    rescue NameError => e
+      "NewNamespace::#{type_name}".split('::').inject(Object) {|obj, name| obj.const_get(name) }
+    end
+  }
+```
 	
 ## TODO
 
