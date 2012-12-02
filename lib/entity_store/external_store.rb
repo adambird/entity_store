@@ -6,12 +6,7 @@ module EntityStore
     include Mongo
     
     def open_connection
-      @db ||= open_store
-    end
-    
-    def open_store
-      uri  = URI.parse(EntityStore.external_connection_profile)
-      Connection.from_uri(EntityStore.external_connection_profile).db(uri.path.gsub(/^\//, ''))
+      EntityStore.external_mongo_connection
     end
     
     def collection

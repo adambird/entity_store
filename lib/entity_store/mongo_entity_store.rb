@@ -7,17 +7,7 @@ module EntityStore
     include Hatchet
 
     def open_connection
-      @db ||= open_store
-    end
-
-    def open_store
-      uri  = URI.parse(EntityStore.connection_profile)
-      connection = Connection.from_uri(EntityStore.connection_profile, :connect_timeout => connect_timeout)
-      connection.db(uri.path.gsub(/^\//, ''))
-    end
-
-    def connect_timeout
-      (ENV['ENTITY_STORE_CONNECT_TIMEOUT'] || '2').to_i
+      EntityStore.mongo_connection
     end
 
     def entities
