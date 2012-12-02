@@ -6,7 +6,7 @@ module EntityStore
     include Mongo
     
     def open_connection
-      EntityStore.external_mongo_connection
+      EntityStore.external_mongo_connection.db[EntityStore.external_db]
     end
     
     def collection

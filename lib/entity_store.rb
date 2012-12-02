@@ -14,13 +14,15 @@ module EntityStore
   require 'entity_store/attributes'
 
   class << self
-    attr_reader :mongo_connection, :external_mongo_connection
+    attr_reader :mongo_connection, :external_mongo_connection, :entity_db, :external_db
     attr_accessor :connection_profile, :external_connection_profile
     def setup
       yield self
 
       @mongo_connection = open_store(@connection_profile)
+      @entity_db = extract_db(@connection_profile)
       @external_mongo_connection = open_store(@external_connection_profile)
+      @external_db = extract_db(@external_connection_profile)
     end
     
     def event_subscribers
@@ -52,9 +54,11 @@ module EntityStore
     end
 
     def open_store(url)
-      uri  = URI.parse(url)
-      connection = Mongo::MongoClient.from_uri(url, :connect_timeout => connect_timeout)
-      connection.db(uri.path.gsub(/^\//, ''))
+      Mongo::MongoClient.from_uri(url, :connect_timeout => connect_timeout)
+    end
+
+    def extract_db(url)
+      URI.parse(url).path.gsub(/^\//, '')
     end
 
     def connect_timeout
