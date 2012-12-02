@@ -7,7 +7,7 @@ module EntityStore
     include Hatchet
 
     def open_connection
-      EntityStore.mongo_connection.db[EntityStore.entity_db]
+      EntityStore.mongo_connection.db(EntityStore.entity_db)
     end
 
     def entities
