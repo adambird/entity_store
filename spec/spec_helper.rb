@@ -18,6 +18,8 @@ Hatchet.configure do |config|
   end
 end
 
+include EntityStore
+
 EntityStore.setup do |config|
   config.connection_profile = "mongodb://localhost/entity_store_test" 
   config.external_connection_profile = "mongodb://localhost/external_entity_store_test" 
