@@ -46,8 +46,8 @@ module EntityStore
     attr_accessor :type_loader
     
     def load_type(type_name)
-      if type_loader
-        type_loader.call(type_name)
+      if EntityStore.type_loader
+        EntityStore.type_loader.call(type_name)
       else
         type_name.split('::').inject(Object) {|obj, name| obj.const_get(name) }
       end
