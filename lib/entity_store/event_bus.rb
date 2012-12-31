@@ -47,7 +47,7 @@ module EntityStore
       while event_data_objects.count > 0 do 
         event_data_objects.each do |event_data_object|
           begin
-            event = get_type_constant(event_data_object.type).new(event_data_object.attrs)
+            event = EntityStore.load_type(event_data_object.type).new(event_data_object.attrs)
             subscriber.new.send(event.receiver_name, event)
             logger.info { "replayed #{event.inspect} to #{subscriber.name}##{event.receiver_name}" }
           rescue => e
@@ -56,10 +56,6 @@ module EntityStore
         end
         event_data_objects = external_store.get_events(event_data_objects.last.id, type, max_items)
       end
-    end
-
-    def get_type_constant(type_name)
-      type_name.split('::').inject(Object) {|obj, name| obj.const_get(name) }
     end
   end
 end

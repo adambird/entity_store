@@ -68,7 +68,7 @@ module EntityStore
           logger.error "Error loading type #{attrs['_type']}", e
           raise
         end
-        
+
         since_version = attrs['snapshot'] ? attrs['snapshot']['version'] : nil
 
         get_events(id, since_version).each do |event| 
@@ -110,8 +110,5 @@ module EntityStore
       end.select { |e| !e.nil? }
     end
 
-    # def get_type_constant(type_name)
-    #   type_name.split('::').inject(Object) {|obj, name| obj.const_get(name) }
-    # end
   end
 end
