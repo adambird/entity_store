@@ -14,15 +14,14 @@ module EntityStore
   require 'entity_store/attributes'
 
   class << self
-    attr_reader :mongo_connection, :external_mongo_connection, :entity_db, :external_db
-    attr_accessor :connection_profile, :external_connection_profile
+    attr_accessor :store, :external_store
+
     def setup
       yield self
 
-      @mongo_connection = open_store(@connection_profile)
-      @entity_db = extract_db(@connection_profile)
-      @external_mongo_connection = open_store(@external_connection_profile)
-      @external_db = extract_db(@external_connection_profile)
+      raise StandardError.new("EntityStore.store not assigned") unless store
+      store.open 
+      external_store.open if external_store
     end
     
     def event_subscribers
@@ -51,14 +50,6 @@ module EntityStore
       else
         type_name.split('::').inject(Object) {|obj, name| obj.const_get(name) }
       end
-    end
-
-    def open_store(url)
-      Mongo::MongoClient.from_uri(url, :connect_timeout => connect_timeout)
-    end
-
-    def extract_db(url)
-      URI.parse(url).path.gsub(/^\//, '')
     end
 
     def connect_timeout

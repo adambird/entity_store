@@ -6,16 +6,29 @@ module EntityStore
     include Mongo
     include Hatchet
 
-    def open_connection
-      EntityStore.mongo_connection.db(EntityStore.entity_db)
+    class << self
+      attr_accessor :connection_profile
+      attr_writer :connect_timeout
+
+      def connection
+        @_connection ||= Mongo::MongoClient.from_uri(MongoEntityStore.connection_profile, :connect_timeout => EntityStore.connect_timeout)
+      end
+
+      def database
+        URI.parse(MongoEntityStore.connection_profile).path.gsub(/^\//, '')
+      end
+    end
+
+    def open
+      MongoEntityStore.connection.db(MongoEntityStore.database)
     end
 
     def entities
-      @entities_collection ||= open_connection['entities']
+      @entities_collection ||= open['entities']
     end
 
     def events
-      @events_collection ||= open_connection['entity_events']
+      @events_collection ||= open['entity_events']
     end
 
     def ensure_indexes

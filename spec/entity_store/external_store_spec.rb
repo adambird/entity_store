@@ -12,6 +12,7 @@ end
 
 describe ExternalStore do
   before(:each) do
+    ExternalStore.connection_profile = "mongodb://localhost/external_store_default"
     ExternalStore.new.collection.drop
     @store = ExternalStore.new
   end

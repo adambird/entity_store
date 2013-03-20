@@ -20,11 +20,6 @@ end
 
 include EntityStore
 
-EntityStore.setup do |config|
-  config.connection_profile = "mongodb://localhost/entity_store_test" 
-  config.external_connection_profile = "mongodb://localhost/external_entity_store_test" 
-end
-
 def random_string
   (0...24).map{ ('a'..'z').to_a[rand(26)] }.join
 end

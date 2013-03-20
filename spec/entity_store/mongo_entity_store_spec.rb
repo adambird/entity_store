@@ -11,7 +11,7 @@ end
 
 describe MongoEntityStore do
   before(:each) do
-    EntityStore.connection_profile = "mongodb://localhost/entity_store_default"
+    MongoEntityStore.connection_profile = "mongodb://localhost/entity_store_default"
     @store = MongoEntityStore.new
   end
 
