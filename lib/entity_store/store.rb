@@ -64,6 +64,17 @@ module EntityStore
 
     def get(id, raise_exception=false)
       if entity = storage_client.get_entity(id, raise_exception)
+
+        storage_client.get_events(id, entity.version).each do |event| 
+          begin
+            event.apply(entity) 
+            logger.debug { "Applied #{event.inspect} to #{id}" }
+          rescue => e
+            logger.error "Failed to apply #{event.class.name} #{event.attributes} to #{id} with #{e.inspect}", e
+          end
+          entity.version = event.entity_version
+        end
+
         # assign this entity loader to allow lazy loading of related entities
         entity.related_entity_loader = self
       end
@@ -74,8 +85,7 @@ module EntityStore
     #
     # Returns nothing
     def clear_all
-      storage_client.entities.drop
-      storage_client.events.drop
+      storage_client.clear
       @_storage_client = nil
     end
 

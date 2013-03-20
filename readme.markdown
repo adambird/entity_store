@@ -17,7 +17,7 @@ class Tyre
 	attr_accessor :pressure
 
 	def inflate(new_pressure)
-		record_event(TyreInflated.new(new_pressure))
+		record_event TyreInflated.new(new_pressure: new_pressure)
 	end
 end
 ```
@@ -124,7 +124,60 @@ You can also override the type loader used by passing a lambda or a Proc. Handy 
     end
   }
 ```
+
+## Replace The Store
+
+The store used is replaceable. The minimum interface requirements for the `EntityStore.store`. Types should be loaded using the `EntityStore.load_type` method *(bit smelly)*.
+
+```ruby
+class MyStore
+
+	def add_entity(entity)
+	  # this method should assign an id to the entity
+	end
+
+	def save_entity(entity)
+		# this will be called if the entity has an id
+	end
+
+	def get_entity(id)
+		# returns the entity as an empty shell of the appropriate type
+		# if a snapshot exists then this should be returned
+	end
+
+	def get_events(id, since_version=nil)
+		# returns all events in time sequence since the version if passed otherwise all
+	end
+
+	def snapshot_entity(entity)
+		# create a snapshot of the entity that can be retrievd without replaying 
+		# the entire event stream
+	end
+
+	def remove_entity_snapshot(id)
+		# remove the snapshot so next time the entity is retrieved it replays the event stream
+		# to rehhydrate the entity
+	end
+
+end
+```
+
+You can also replace the `EntityStore.feed_store` with 
+
+```ruby
+class MyFeedStore
 	
+	def add_event(entity_type, event)
+		# entity_type is a string 
+	end
+
+	def get_events(since, type=nil, max_items=nil)
+		# retrieve all events since a the DateTime passed as since
+	end
+
+end
+```
+
 ## TODO
 
 + Concurrency - actually do something with the version of the entity

@@ -31,6 +31,13 @@ module EntityStore
       @events_collection ||= open['entity_events']
     end
 
+    def clear
+      entities.drop
+      @entities_collection = nil
+      events.drop
+      @events_collection = nil
+    end
+
     def ensure_indexes
       events.ensure_index([['_entity_id', Mongo::ASCENDING], ['_id', Mongo::ASCENDING]])
       events.ensure_index([['_entity_id', Mongo::ASCENDING], ['entity_version', Mongo::ASCENDING], ['_id', Mongo::ASCENDING]])
@@ -81,19 +88,7 @@ module EntityStore
           logger.error "Error loading type #{attrs['_type']}", e
           raise
         end
-
-        since_version = attrs['snapshot'] ? attrs['snapshot']['version'] : nil
-
-        get_events(id, since_version).each do |event| 
-          begin
-            event.apply(entity) 
-            logger.debug { "Applied #{event.inspect} to #{id}" }
-          rescue => e
-            logger.error "Failed to apply #{event.class.name} #{event.attributes} to #{id} with #{e.inspect}", e
-          end
-          entity.version = event.entity_version
-        end
-
+        
         entity
       else
         raise NotFound.new(id) if raise_exception
