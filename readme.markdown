@@ -102,11 +102,13 @@ The first argument is the Time from which you wish to find events from.
 
 ## Configuration
 
-An initialiser file should contain something similar to this
+An initialiser file should assign at minimum a configured `store` to use.
 
 ```ruby
+EntityStore::MongoEntityStore.connection_profile = ENV['MONGO_URL'] || "mongodb://localhost/my_cars_#{Rails.env}"
+
 EntityStore.setup do |config|
-	config.connection_profile = ENV['MONGO_URL'] || "mongodb://localhost/my_cars_#{Rails.env}"
+	config.store = EntityStore::MongoEntityStore.new
 	config.event_subscribers.concat([CarDenormaliser, CarSafetyService])
 end
 ```

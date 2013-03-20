@@ -3,7 +3,7 @@ module EntityStore
     include Hatchet
 
     def storage_client
-      @_storage_client ||= MongoEntityStore.new
+      @_storage_client ||= EntityStore.store
     end
 
     def add(entity)
