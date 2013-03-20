@@ -3,7 +3,7 @@ module EntityStore
     include Hatchet
 
     def publish(entity_type, event)
-      publish_externally entity_type, event
+      publish_to_feed entity_type, event
 
       logger.debug { "publishing #{event.inspect}" }
 
@@ -25,12 +25,12 @@ module EntityStore
       EntityStore.event_subscribers
     end
 
-    def publish_externally(entity_type, event)
-      external_store.add_event(entity_type, event)
+    def publish_to_feed(entity_type, event)
+      feed_store.add_event(entity_type, event) if feed_store
     end
 
-    def external_store
-      @_external_store ||= ExternalStore.new
+    def feed_store
+      EntityStore.feed_store
     end
 
     # Public - replay events of a given type to a given subscriber
@@ -42,7 +42,7 @@ module EntityStore
     # Returns nothing
     def replay(since, type, subscriber)
       max_items = 100
-      event_data_objects = external_store.get_events(since, type, max_items)
+      event_data_objects = feed_store.get_events(since, type, max_items)
 
       while event_data_objects.count > 0 do 
         event_data_objects.each do |event_data_object|
@@ -54,7 +54,7 @@ module EntityStore
             logger.error "#{e.message} when replaying #{event_data_object.inspect} to #{subscriber}", e         
           end
         end
-        event_data_objects = external_store.get_events(event_data_objects.last.id, type, max_items)
+        event_data_objects = feed_store.get_events(event_data_objects.last.id, type, max_items)
       end
     end
   end

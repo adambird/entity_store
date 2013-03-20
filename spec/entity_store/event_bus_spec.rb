@@ -23,7 +23,7 @@ describe EventBus do
       DummySubscriber.stub(:new) { @subscriber }
       @subscriber_class2 = mock("SubscriberClass", :instance_methods => ['bilge'], :name => "SubscriberClass")
       @event_bus.stub(:subscribers).and_return([DummySubscriber, @subscriber_class2])
-      @event_bus.stub(:publish_externally)
+      @event_bus.stub(:publish_to_feed)
     end
     
     subject { @event_bus.publish(@entity_type, @event) }
@@ -37,21 +37,21 @@ describe EventBus do
       subject
     end
     it "publishes event to the external event push" do
-      @event_bus.should_receive(:publish_externally).with(@entity_type, @event)
+      @event_bus.should_receive(:publish_to_feed).with(@entity_type, @event)
       subject
     end
   end
   
-  describe ".publish_externally" do
+  describe ".publish_to_feed" do
     before(:each) do
-      @external_store = mock(ExternalStore)
-      @event_bus.stub(:external_store) { @external_store }
+      @feed_store = mock(ExternalStore)
+      @event_bus.stub(:feed_store) { @feed_store }
     end
     
-    subject { @event_bus.publish_externally @entity_type, @event }
+    subject { @event_bus.publish_to_feed @entity_type, @event }
     
     it "should publish to the external store" do
-      @external_store.should_receive(:add_event).with(@entity_type, @event)
+      @feed_store.should_receive(:add_event).with(@entity_type, @event)
       subject
     end
   end
@@ -63,18 +63,18 @@ describe EventBus do
       @subscriber = mock("Subscriber", :dummy_event => true)
       DummySubscriber.stub(:new) { @subscriber }
 
-      @external_store = mock(ExternalStore)
+      @feed_store = mock(ExternalStore)
       @id = random_object_id
-      @external_store.stub(:get_events) { |since| since == @id ? [] : [
+      @feed_store.stub(:get_events) { |since| since == @id ? [] : [
         EventDataObject.new('_id' => @id, '_type' => DummyEvent.name, 'name' => random_string) 
       ]}
-      @event_bus.stub(:external_store) { @external_store }
+      @event_bus.stub(:feed_store) { @feed_store }
     end 
 
     subject { @event_bus.replay(@since, @type, DummySubscriber) }
 
     it "gets the events for that period" do
-      @external_store.should_receive(:get_events).with(@since, @type, 100)
+      @feed_store.should_receive(:get_events).with(@since, @type, 100)
       subject
     end
     it "publishes them to the subscriber" do

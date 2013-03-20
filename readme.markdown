@@ -113,6 +113,8 @@ EntityStore.setup do |config|
 end
 ```
 
+`EntityStore.feed_store` is configured in a similar way.
+
 You can also override the type loader used by passing a lambda or a Proc. Handy if, as in my case, you moved the entity classes to a new module namespace.
 
 ``` ruby

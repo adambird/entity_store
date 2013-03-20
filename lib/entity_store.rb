@@ -7,21 +7,21 @@ module EntityStore
   require 'entity_store/store'
   require 'entity_store/external_store'
   require 'entity_store/event_data_object'
-  require 'entity_store/mongo_entity_store'
+  require 'entity_store/mongo_entity_store' if 
   require 'entity_store/event_bus'
   require 'entity_store/not_found'
   require 'entity_store/hash_serialization'
   require 'entity_store/attributes'
 
   class << self
-    attr_accessor :store, :external_store
+    attr_accessor :store, :feed_store
 
     def setup
       yield self
 
       raise StandardError.new("EntityStore.store not assigned") unless store
       store.open 
-      external_store.open if external_store
+      feed_store.open if feed_store
     end
     
     def event_subscribers
