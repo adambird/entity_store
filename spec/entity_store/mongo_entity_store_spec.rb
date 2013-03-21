@@ -19,7 +19,7 @@ describe MongoEntityStore do
     before(:each) do
       @id = random_object_id
       @attrs = { 
-        '_type' => "MongoEntityStoreSpec::DummyEntity", 
+        '_type' => MongoEntityStoreSpec::DummyEntity.name, 
         'version' => @version = random_integer
       }
       @entity = MongoEntityStoreSpec::DummyEntity.new

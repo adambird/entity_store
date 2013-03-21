@@ -134,8 +134,13 @@ The store used is replaceable. The minimum interface requirements for the `Entit
 ```ruby
 class MyStore
 
+	# Public - adds the entity to the store
+	#
+	# entity     - An object that behaves an entity, use the EntityStore::Entity mixin
+	#
+	# Returns String id of the entity
 	def add_entity(entity)
-	  # this method should assign an id to the entity
+	  
 	end
 
 	def save_entity(entity)

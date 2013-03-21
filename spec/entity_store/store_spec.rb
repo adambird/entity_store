@@ -80,7 +80,7 @@ describe Store do
     context "when entity has related entities loaded" do
       before(:each) do
         @entity = DummyEntityForStore.new(:id => random_string)
-        @entity.version = random_integer * EntityStore.snapshot_threshold + 1
+        @entity.version = random_integer * EntityStore::Config.snapshot_threshold + 1
         @store = Store.new
         @related_entity = mock('Entity')
         @entity.stub(:loaded_related_entities) { [ @related_entity ] }
@@ -104,7 +104,7 @@ describe Store do
     before(:each) do
       @new_id = random_string
       @entity = DummyEntityForStore.new(:id => random_string)
-      @entity.version = random_integer * EntityStore.snapshot_threshold
+      @entity.version = random_integer * EntityStore::Config.snapshot_threshold
       @storage_client = mock("StorageClient", :save_entity => true)
       @store = Store.new
       @store.stub(:add_events)
@@ -161,7 +161,7 @@ describe Store do
 
     context "when entity version is commensurate with snapshotting" do
       before(:each) do
-        @entity.version = random_integer * EntityStore.snapshot_threshold - 1
+        @entity.version = random_integer * EntityStore::Config.snapshot_threshold - 1
       end
 
       it "should snapshot the entity" do

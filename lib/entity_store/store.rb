@@ -1,9 +1,9 @@
 module EntityStore
   class Store
-    include Hatchet
+    include Logging
 
     def storage_client
-      @_storage_client ||= EntityStore.store
+      @_storage_client ||= EntityStore::Config.store
     end
 
     def add(entity)
@@ -31,11 +31,11 @@ module EntityStore
           entity.id = storage_client.add_entity(entity)
         end
         add_events(entity)
-        snapshot_entity(entity) if entity.version % EntityStore.snapshot_threshold == 0
+        snapshot_entity(entity) if entity.version % Config.snapshot_threshold == 0
       end
       entity
     rescue => e
-      logger.error { "Store#do_save error: #{e.inspect} - #{entity.inspect}" }
+      log_error "Store#do_save error: #{e.inspect} - #{entity.inspect}", e
       raise e
     end
 
@@ -70,7 +70,7 @@ module EntityStore
             event.apply(entity) 
             logger.debug { "Applied #{event.inspect} to #{id}" }
           rescue => e
-            logger.error "Failed to apply #{event.class.name} #{event.attributes} to #{id} with #{e.inspect}", e
+            log_error "Failed to apply #{event.class.name} #{event.attributes} to #{id} with #{e.inspect}", e
           end
           entity.version = event.entity_version
         end

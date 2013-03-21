@@ -10,7 +10,7 @@ module EntityStore
       attr_writer :connect_timeout
 
       def connection
-        @_connection ||= Mongo::MongoClient.from_uri(ExternalStore.connection_profile, :connect_timeout => EntityStore.connect_timeout)
+        @_connection ||= Mongo::MongoClient.from_uri(ExternalStore.connection_profile, :connect_timeout => EntityStore::Config.connect_timeout)
       end
 
       def database

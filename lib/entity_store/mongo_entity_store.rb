@@ -4,14 +4,14 @@ require 'uri'
 module EntityStore
   class MongoEntityStore
     include Mongo
-    include Hatchet
+    include Logging
 
     class << self
       attr_accessor :connection_profile
       attr_writer :connect_timeout
 
       def connection
-        @_connection ||= Mongo::MongoClient.from_uri(MongoEntityStore.connection_profile, :connect_timeout => EntityStore.connect_timeout)
+        @_connection ||= Mongo::MongoClient.from_uri(MongoEntityStore.connection_profile, :connect_timeout => EntityStore::Config.connect_timeout)
       end
 
       def database
@@ -83,9 +83,11 @@ module EntityStore
     def get_entity(id, raise_exception=false)
       if attrs = entities.find_one('_id' => BSON::ObjectId.from_string(id))
         begin
-          entity = EntityStore.load_type(attrs['_type']).new(attrs['snapshot'] || {'id' => id, 'version' => attrs['version']})
+          entity_type = EntityStore::Config.load_type(attrs['_type'])
+          puts attrs.inspect
+          entity = entity_type.new(attrs['snapshot'] || {'id' => id, 'version' => attrs['version']})
         rescue => e
-          logger.error "Error loading type #{attrs['_type']}", e
+          log_error "Error loading type #{attrs['_type']}", e
           raise
         end
         
@@ -110,9 +112,9 @@ module EntityStore
 
       events.find(query, options).collect do |attrs|
         begin
-          EntityStore.load_type(attrs['_type']).new(attrs)
+          EntityStore::Config.load_type(attrs['_type']).new(attrs)
         rescue => e
-          logger.error "Error loading type #{attrs['_type']}", e
+          log_error "Error loading type #{attrs['_type']}", e
           nil
         end
       end.select { |e| !e.nil? }
