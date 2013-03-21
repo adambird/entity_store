@@ -9,7 +9,10 @@ end
 
 include EntityStore
 
-EntityStore::Config.logger.level = ::Logger::FATAL
+require 'logger'
+logger = ::Logger.new(STDOUT)
+logger.level = ::Logger::ERROR
+EntityStore::Config.logger = logger
 
 def random_string
   (0...24).map{ ('a'..'z').to_a[rand(26)] }.join

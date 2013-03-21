@@ -40,7 +40,7 @@ module EntityStore
     end
 
     def snapshot_entity(entity)
-      logger.info { "Store#snapshot_entity : Snapshotting #{entity.id}"}
+      log_info { "Store#snapshot_entity : Snapshotting #{entity.id}"}
       storage_client.snapshot_entity(entity)
     end
 
@@ -68,7 +68,7 @@ module EntityStore
         storage_client.get_events(id, entity.version).each do |event| 
           begin
             event.apply(entity) 
-            logger.debug { "Applied #{event.inspect} to #{id}" }
+            log_debug { "Applied #{event.inspect} to #{id}" }
           rescue => e
             log_error "Failed to apply #{event.class.name} #{event.attributes} to #{id} with #{e.inspect}", e
           end

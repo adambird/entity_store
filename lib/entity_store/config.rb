@@ -11,7 +11,7 @@ module EntityStore
       attr_accessor :type_loader
 
       # Logger can be assigned
-      attr_writer :logger
+      attr_accessor :logger
 
       def setup
         yield self
@@ -47,16 +47,6 @@ module EntityStore
       def connect_timeout
         (ENV['ENTITY_STORE_CONNECT_TIMEOUT'] || '2').to_i
       end
-
-      def logger
-        unless @logger
-          require 'logger'
-          @logger = ::Logger.new(STDOUT)
-          @logger.level = ::Logger::INFO
-        end
-        @logger 
-      end
-
     end
 
   end

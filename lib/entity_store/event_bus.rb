@@ -8,7 +8,7 @@ module EntityStore
       subscribers_to(event.receiver_name).each do |s|
         begin
           s.new.send(event.receiver_name, event)
-          logger.debug { "called #{s.name}##{event.receiver_name} with #{event.inspect}" }
+          log_debug { "called #{s.name}##{event.receiver_name} with #{event.inspect}" }
         rescue => e
           log_error "#{e.message} when calling #{s.name}##{event.receiver_name} with #{event.inspect}", e
         end
@@ -47,7 +47,7 @@ module EntityStore
           begin
             event = EntityStore::Config.load_type(event_data_object.type).new(event_data_object.attrs)
             subscriber.new.send(event.receiver_name, event)
-            logger.info { "replayed #{event.inspect} to #{subscriber.name}##{event.receiver_name}" }
+            log_info { "replayed #{event.inspect} to #{subscriber.name}##{event.receiver_name}" }
           rescue => e
             log_error "#{e.message} when replaying #{event_data_object.inspect} to #{subscriber}", e
           end
