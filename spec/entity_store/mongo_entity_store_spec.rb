@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module MongoEntityStoreSpec
   class DummyEntity
-    include Entity
+    include EntityStore::Entity
 
     attr_accessor :name, :description
 

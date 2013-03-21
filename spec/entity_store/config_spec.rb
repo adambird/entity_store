@@ -29,6 +29,10 @@ describe EntityStore::Config do
       it "should return the result of that type loader" do
         subject.should eq(Level1::Level2::AnotherClass)
       end
+
+      after(:each) do
+        EntityStore::Config.type_loader = nil
+      end
     end
   end
 end
