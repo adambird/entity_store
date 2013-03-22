@@ -18,8 +18,8 @@ module EntityStore
     def attribute_methods
       public_methods
         .select { |m| m =~ /\w\=$/ }
-        .select { |m| respond_to?(m.to_s.chop) }
         .collect { |m| m.to_s.chop.to_sym }
+        .select { |m| respond_to?(m) }
     end
 
     def attribute_value(value)
