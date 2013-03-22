@@ -9,14 +9,17 @@ module EntityStore
     # did use flatten but this came a-cropper when the attribute value was an array
     def attributes
       attrs = {}
-      public_methods
-        .collect { |m| m.to_s.gsub(':', '') } # added in to support how RubyMotion describes public methods
-        .select { |m| m =~ /\w\=$/ }
-        .select { |m| respond_to?(m.to_s.chop) }
-        .collect { |m| m.to_s.chop.to_sym }
+      attribute_methods
         .collect { |m| [m, attribute_value(send(m))] }
         .each do |item| attrs[item[0]] = item[1] end
       attrs
+    end
+
+    def attribute_methods
+      public_methods
+        .select { |m| m =~ /\w\=$/ }
+        .select { |m| respond_to?(m.to_s.chop) }
+        .collect { |m| m.to_s.chop.to_sym }
     end
 
     def attribute_value(value)
