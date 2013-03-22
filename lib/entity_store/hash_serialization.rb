@@ -10,6 +10,7 @@ module EntityStore
     def attributes
       attrs = {}
       public_methods
+        .collect { |m| m.to_s.gsub(':', '') } # added in to support how RubyMotion describes public methods
         .select { |m| m =~ /\w\=$/ }
         .select { |m| respond_to?(m.to_s.chop) }
         .collect { |m| m.to_s.chop.to_sym }

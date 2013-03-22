@@ -152,6 +152,10 @@ class MyStore
 		# if a snapshot exists then this should be returned
 	end
 
+	def add_event(event)
+
+	end
+	
 	def get_events(id, since_version=nil)
 		# returns all events in time sequence since the version if passed otherwise all
 	end
