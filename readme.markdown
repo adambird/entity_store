@@ -1,6 +1,6 @@
 # Entity Store
 
-Event sourced entity store implementation using MongoDB as a back end. Split out of Bunch project in order to be shared with others.
+Event sourced entity store implementation that ships with a MongoDB store but this can be replaced. Version 0.2 release now allows for running on iOS as part of the [entity_stormotion gem](http://github.com/adambird/entity_stormotion).
 
 # Usage
 
