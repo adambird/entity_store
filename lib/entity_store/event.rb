@@ -24,8 +24,17 @@ module EntityStore
         class_eval do
           names.each do |name|
             define_method "#{name}=" do |value|
-              require 'time'
-              instance_variable_set("@#{name}", value.kind_of?(String) ? Time.parse(value) : value)
+              if value.kind_of?(String)
+                # implementing parsing here rather than using std-lib Time.parse to 
+                # allow portability across platforms
+                parts = /(?:(\d+))-(?:(\d+))-(?:(\d+))\s(?:(\d+)):(?:(\d+)):(?:(\d+))\s(?:(.+))/.match(value)
+                offset = parts[7].gsub(/\d{4}/) do |m| m.scan(/../).join(":") end
+                new_value = Time.new(parts[1].to_i, parts[2].to_i, parts[3].to_i, parts[4].to_i, parts[5].to_i, parts[6].to_i, offset)
+              else
+                new_value = value
+              end
+
+              instance_variable_set "@#{name}", new_value
             end
             define_method name do
               instance_variable_get "@#{name}"
