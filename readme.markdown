@@ -1,6 +1,6 @@
 # Entity Store
 
-Event sourced entity store implementation using MongoDB as a back end. Split out of Bunch project in order to be shared with others.
+Event sourced entity store implementation that ships with a MongoDB store but this can be replaced. Version 0.2 release now allows for running on iOS as part of the [entity_stormotion gem](http://github.com/adambird/entity_stormotion).
 
 # Usage
 
@@ -17,7 +17,7 @@ class Tyre
 	attr_accessor :pressure
 
 	def inflate(new_pressure)
-		record_event(TyreInflated.new(new_pressure))
+		record_event TyreInflated.new(new_pressure: new_pressure)
 	end
 end
 ```
@@ -102,14 +102,18 @@ The first argument is the Time from which you wish to find events from.
 
 ## Configuration
 
-An initialiser file should contain something similar to this
+An initialiser file should assign at minimum a configured `store` to use.
 
 ```ruby
+EntityStore::MongoEntityStore.connection_profile = ENV['MONGO_URL'] || "mongodb://localhost/my_cars_#{Rails.env}"
+
 EntityStore.setup do |config|
-	config.connection_profile = ENV['MONGO_URL'] || "mongodb://localhost/my_cars_#{Rails.env}"
+	config.store = EntityStore::MongoEntityStore.new
 	config.event_subscribers.concat([CarDenormaliser, CarSafetyService])
 end
 ```
+
+`EntityStore.feed_store` is configured in a similar way.
 
 You can also override the type loader used by passing a lambda or a Proc. Handy if, as in my case, you moved the entity classes to a new module namespace.
 
@@ -122,7 +126,69 @@ You can also override the type loader used by passing a lambda or a Proc. Handy 
     end
   }
 ```
+
+## Replace The Store
+
+The store used is replaceable. The minimum interface requirements for the `EntityStore.store`. Types should be loaded using the `EntityStore.load_type` method *(bit smelly)*.
+
+```ruby
+class MyStore
+
+	# Public - adds the entity to the store
+	#
+	# entity     - An object that behaves an entity, use the EntityStore::Entity mixin
+	#
+	# Returns String id of the entity
+	def add_entity(entity)
+	  
+	end
+
+	def save_entity(entity)
+		# this will be called if the entity has an id
+	end
+
+	def get_entity(id)
+		# returns the entity as an empty shell of the appropriate type
+		# if a snapshot exists then this should be returned
+	end
+
+	def add_event(event)
+
+	end
 	
+	def get_events(id, since_version=nil)
+		# returns all events in time sequence since the version if passed otherwise all
+	end
+
+	def snapshot_entity(entity)
+		# create a snapshot of the entity that can be retrievd without replaying 
+		# the entire event stream
+	end
+
+	def remove_entity_snapshot(id)
+		# remove the snapshot so next time the entity is retrieved it replays the event stream
+		# to rehhydrate the entity
+	end
+
+end
+```
+
+You can also replace the `EntityStore.feed_store` with 
+
+```ruby
+class MyFeedStore
+	
+	def add_event(entity_type, event)
+		# entity_type is a string 
+	end
+
+	def get_events(since, type=nil, max_items=nil)
+		# retrieve all events since a the DateTime passed as since
+	end
+
+end
+```
+
 ## TODO
 
 + Concurrency - actually do something with the version of the entity

@@ -80,7 +80,7 @@ describe Store do
     context "when entity has related entities loaded" do
       before(:each) do
         @entity = DummyEntityForStore.new(:id => random_string)
-        @entity.version = random_integer * EntityStore.snapshot_threshold + 1
+        @entity.version = random_integer * EntityStore::Config.snapshot_threshold + 1
         @store = Store.new
         @related_entity = mock('Entity')
         @entity.stub(:loaded_related_entities) { [ @related_entity ] }
@@ -104,7 +104,7 @@ describe Store do
     before(:each) do
       @new_id = random_string
       @entity = DummyEntityForStore.new(:id => random_string)
-      @entity.version = random_integer * EntityStore.snapshot_threshold
+      @entity.version = random_integer * EntityStore::Config.snapshot_threshold
       @storage_client = mock("StorageClient", :save_entity => true)
       @store = Store.new
       @store.stub(:add_events)
@@ -161,7 +161,7 @@ describe Store do
 
     context "when entity version is commensurate with snapshotting" do
       before(:each) do
-        @entity.version = random_integer * EntityStore.snapshot_threshold - 1
+        @entity.version = random_integer * EntityStore::Config.snapshot_threshold - 1
       end
 
       it "should snapshot the entity" do
@@ -175,9 +175,12 @@ describe Store do
   describe "#get" do
     before(:each) do
       @id = random_integer
-      @entity = DummyEntityForStore.new
+      @entity = DummyEntityForStore.new(id: random_string, version: random_integer)
       DummyEntityForStore.stub(:new).and_return(@entity)
-      @events = [mock("Event", :apply => true), mock("Event", :apply => true)]
+      @events = [
+        mock("Event", apply: true, entity_version: @entity.version + 1), 
+        mock("Event", apply: true, entity_version: @entity.version + 2)
+      ]
 
       @storage_client = mock("StorageClient", :get_entity => @entity, :get_events => @events)
       @store = Store.new
@@ -196,6 +199,18 @@ describe Store do
     end
     it "should return a ride" do
       subject.should eq(@entity)
+    end
+    it "should retrieve it's events" do
+      @storage_client.should_receive(:get_events).with(@id, @entity.version)
+      subject
+    end
+    it "should apply each event to the entity" do
+      @events.each do |event| event.should_receive(:apply).with(@entity) end
+      subject
+    end
+    it "should set the entity version to that of the last event" do
+      subject
+      @entity.version.should eq(@events.last.entity_version)
     end
   end
 end

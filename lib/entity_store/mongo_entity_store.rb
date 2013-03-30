@@ -4,18 +4,38 @@ require 'uri'
 module EntityStore
   class MongoEntityStore
     include Mongo
-    include Hatchet
+    include Logging
 
-    def open_connection
-      EntityStore.mongo_connection.db(EntityStore.entity_db)
+    class << self
+      attr_accessor :connection_profile
+      attr_writer :connect_timeout
+
+      def connection
+        @_connection ||= Mongo::MongoClient.from_uri(MongoEntityStore.connection_profile, :connect_timeout => EntityStore::Config.connect_timeout)
+      end
+
+      def database
+        URI.parse(MongoEntityStore.connection_profile).path.gsub(/^\//, '')
+      end
+    end
+
+    def open
+      MongoEntityStore.connection.db(MongoEntityStore.database)
     end
 
     def entities
-      @entities_collection ||= open_connection['entities']
+      @entities_collection ||= open['entities']
     end
 
     def events
-      @events_collection ||= open_connection['entity_events']
+      @events_collection ||= open['entity_events']
+    end
+
+    def clear
+      entities.drop
+      @entities_collection = nil
+      events.drop
+      @events_collection = nil
     end
 
     def ensure_indexes
@@ -63,24 +83,13 @@ module EntityStore
     def get_entity(id, raise_exception=false)
       if attrs = entities.find_one('_id' => BSON::ObjectId.from_string(id))
         begin
-          entity = EntityStore.load_type(attrs['_type']).new(attrs['snapshot'] || {'id' => id, 'version' => attrs['version']})
+          entity_type = EntityStore::Config.load_type(attrs['_type'])
+          entity = entity_type.new(attrs['snapshot'] || {'id' => id, 'version' => attrs['version']})
         rescue => e
-          logger.error "Error loading type #{attrs['_type']}", e
+          log_error "Error loading type #{attrs['_type']}", e
           raise
         end
-
-        since_version = attrs['snapshot'] ? attrs['snapshot']['version'] : nil
-
-        get_events(id, since_version).each do |event| 
-          begin
-            event.apply(entity) 
-            logger.debug { "Applied #{event.inspect} to #{id}" }
-          rescue => e
-            logger.error "Failed to apply #{event.class.name} #{event.attributes} to #{id} with #{e.inspect}", e
-          end
-          entity.version = event.entity_version
-        end
-
+        
         entity
       else
         raise NotFound.new(id) if raise_exception
@@ -102,9 +111,9 @@ module EntityStore
 
       events.find(query, options).collect do |attrs|
         begin
-          EntityStore.load_type(attrs['_type']).new(attrs)
+          EntityStore::Config.load_type(attrs['_type']).new(attrs)
         rescue => e
-          logger.error "Error loading type #{attrs['_type']}", e
+          log_error "Error loading type #{attrs['_type']}", e
           nil
         end
       end.select { |e| !e.nil? }

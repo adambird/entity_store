@@ -1,9 +1,9 @@
 module EntityStore
   class Store
-    include Hatchet
+    include Logging
 
     def storage_client
-      @_storage_client ||= MongoEntityStore.new
+      @_storage_client ||= EntityStore::Config.store
     end
 
     def add(entity)
@@ -31,16 +31,16 @@ module EntityStore
           entity.id = storage_client.add_entity(entity)
         end
         add_events(entity)
-        snapshot_entity(entity) if entity.version % EntityStore.snapshot_threshold == 0
+        snapshot_entity(entity) if entity.version % Config.snapshot_threshold == 0
       end
       entity
     rescue => e
-      logger.error { "Store#do_save error: #{e.inspect} - #{entity.inspect}" }
+      log_error "Store#do_save error: #{e.inspect} - #{entity.inspect}", e
       raise e
     end
 
     def snapshot_entity(entity)
-      logger.info { "Store#snapshot_entity : Snapshotting #{entity.id}"}
+      log_info { "Store#snapshot_entity : Snapshotting #{entity.id}"}
       storage_client.snapshot_entity(entity)
     end
 
@@ -64,6 +64,17 @@ module EntityStore
 
     def get(id, raise_exception=false)
       if entity = storage_client.get_entity(id, raise_exception)
+
+        storage_client.get_events(id, entity.version).each do |event| 
+          begin
+            event.apply(entity) 
+            log_debug { "Applied #{event.inspect} to #{id}" }
+          rescue => e
+            log_error "Failed to apply #{event.class.name} #{event.attributes} to #{id} with #{e.inspect}", e
+          end
+          entity.version = event.entity_version
+        end
+
         # assign this entity loader to allow lazy loading of related entities
         entity.related_entity_loader = self
       end
@@ -74,8 +85,7 @@ module EntityStore
     #
     # Returns nothing
     def clear_all
-      storage_client.entities.drop
-      storage_client.events.drop
+      storage_client.clear
       @_storage_client = nil
     end
 
