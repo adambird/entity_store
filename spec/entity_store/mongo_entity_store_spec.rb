@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module MongoEntityStoreSpec
   class DummyEntity
-    include Entity
+    include EntityStore::Entity
 
     attr_accessor :name, :description
 
@@ -11,7 +11,7 @@ end
 
 describe MongoEntityStore do
   before(:each) do
-    EntityStore.connection_profile = "mongodb://localhost/entity_store_default"
+    MongoEntityStore.connection_profile = "mongodb://localhost/entity_store_default"
     @store = MongoEntityStore.new
   end
 
@@ -19,7 +19,7 @@ describe MongoEntityStore do
     before(:each) do
       @id = random_object_id
       @attrs = { 
-        '_type' => "MongoEntityStoreSpec::DummyEntity", 
+        '_type' => MongoEntityStoreSpec::DummyEntity.name, 
         'version' => @version = random_integer
       }
       @entity = MongoEntityStoreSpec::DummyEntity.new
@@ -42,18 +42,6 @@ describe MongoEntityStore do
       MongoEntityStoreSpec::DummyEntity.should_receive(:new).with({'id' => @id, 'version' => @version})
       subject
     end
-    it "should retrieve it's events" do
-      @store.should_receive(:get_events).with(@id, nil)
-      subject
-    end
-    it "should apply each event to the entity" do
-      @events.each do |event| event.should_receive(:apply).with(@entity) end
-      subject
-    end
-    it "should set the entity version to that of the last event" do
-      subject
-      @entity.version.should eq(@events.last.entity_version)
-    end
     it "should return the entity" do
       subject.should eq(@entity)
     end
@@ -67,10 +55,6 @@ describe MongoEntityStore do
       it "should construct a new entity with from the snapshot" do
         MongoEntityStoreSpec::DummyEntity.should_receive(:new).with(@attrs['snapshot'])
         subject
-      end
-      it "should load the events since the snapshot version" do
-         @store.should_receive(:get_events).with(@id, @snapshot_version)
-         subject
       end
     end
   end

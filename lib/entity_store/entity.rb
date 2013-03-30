@@ -1,7 +1,5 @@
 module EntityStore
   module Entity
-    include Hatchet
-    
     attr_accessor :id
     
     def self.included(klass)

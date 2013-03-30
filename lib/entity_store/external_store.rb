@@ -4,9 +4,22 @@ require 'uri'
 module EntityStore
   class ExternalStore
     include Mongo
-    
+
+    class << self
+      attr_accessor :connection_profile
+      attr_writer :connect_timeout
+
+      def connection
+        @_connection ||= Mongo::MongoClient.from_uri(ExternalStore.connection_profile, :connect_timeout => EntityStore::Config.connect_timeout)
+      end
+
+      def database
+        URI.parse(ExternalStore.connection_profile).path.gsub(/^\//, '')
+      end
+    end
+
     def open_connection
-      EntityStore.external_mongo_connection.db(EntityStore.external_db)
+      ExternalStore.connection.db(ExternalStore.database)
     end
     
     def collection
