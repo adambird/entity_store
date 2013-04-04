@@ -2,6 +2,7 @@ module EntityStore
 
   require_relative 'entity_store/logging'
   require_relative 'entity_store/config'
+  require_relative 'entity_store/time_factory'
   require_relative 'entity_store/entity'
   require_relative 'entity_store/entity_value'
   require_relative 'entity_store/event'

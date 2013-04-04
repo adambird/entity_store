@@ -1,3 +1,5 @@
+require 'time' if respond_to?(:require)
+
 module EntityStore
   module Event
     attr_accessor :entity_id, :entity_version
@@ -25,11 +27,7 @@ module EntityStore
           names.each do |name|
             define_method "#{name}=" do |value|
               if value.kind_of?(String)
-                # implementing parsing here rather than using std-lib Time.parse to 
-                # allow portability across platforms
-                parts = /(?:(\d+))-(?:(\d+))-(?:(\d+))\s(?:(\d+)):(?:(\d+)):(?:(\d+))\s(?:(.+))/.match(value)
-                offset = parts[7].gsub(/\d{4}/) do |m| m.scan(/../).join(":") end
-                new_value = Time.new(parts[1].to_i, parts[2].to_i, parts[3].to_i, parts[4].to_i, parts[5].to_i, parts[6].to_i, offset)
+                new_value = TimeFactory.parse(value)
               else
                 new_value = value
               end
