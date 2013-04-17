@@ -15,7 +15,7 @@ module EntityStore
       end
 
       def database
-        URI.parse(MongoEntityStore.connection_profile).path.gsub(/^\//, '')
+        @_database ||= URI.parse(MongoEntityStore.connection_profile).path.gsub(/^\//, '')
       end
     end
 

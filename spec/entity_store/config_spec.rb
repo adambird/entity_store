@@ -35,4 +35,5 @@ describe EntityStore::Config do
       end
     end
   end
+
 end

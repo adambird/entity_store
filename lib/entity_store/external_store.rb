@@ -14,16 +14,16 @@ module EntityStore
       end
 
       def database
-        URI.parse(ExternalStore.connection_profile).path.gsub(/^\//, '')
+        @_database ||= URI.parse(ExternalStore.connection_profile).path.gsub(/^\//, '')
       end
     end
 
-    def open_connection
+    def open
       ExternalStore.connection.db(ExternalStore.database)
     end
     
     def collection
-      @_collection ||= open_connection['events']
+      @_collection ||= open['events']
     end
     
     def ensure_indexes
