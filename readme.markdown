@@ -2,6 +2,8 @@
 
 Event sourced entity store implementation that ships with a MongoDB store but this can be replaced. Version 0.2 release now allows for running on iOS as part of the [entity_stormotion gem](http://github.com/adambird/entity_stormotion).
 
+[![endorse](https://api.coderwall.com/adambird/endorsecount.png)](https://coderwall.com/adambird)
+
 # Usage
 
 ## Tracking state change
