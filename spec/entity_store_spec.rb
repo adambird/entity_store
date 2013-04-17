@@ -42,14 +42,17 @@ describe "end to end" do
 
   context "when save entity" do
     let(:name) { random_string }
-    subject {
-      entity = DummyEntity.new
-      entity.set_name name
-      Store.new.save entity
-    }
+    before(:each) do
+      @entity = DummyEntity.new
+      @entity.set_name name
+      @id = Store.new.save @entity
+    end
+
     it "publishes event to the subscriber" do
-      subject
       DummyEntitySubscriber.event_name.should eq(name)
+    end
+    it "is retrievable with the events applied" do
+      EntityStore::Store.new.get(@entity.id).name.should eq(name)
     end
   end
 end

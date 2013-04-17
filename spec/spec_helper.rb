@@ -1,6 +1,8 @@
 require 'rake'
 require 'rspec'
 require 'mongo'
+require 'hatchet'
+
 require "#{Rake.application.original_dir}/lib/entity_store"
 
 RSpec.configure do |config|
@@ -9,10 +11,16 @@ end
 
 include EntityStore
 
-require 'logger'
-logger = ::Logger.new(STDOUT)
-logger.level = ::Logger::ERROR
-EntityStore::Config.logger = logger
+Hatchet.configure do |config|
+  config.level :fatal
+  config.formatter = Hatchet::SimpleFormatter.new
+  config.appenders << Hatchet::LoggerAppender.new do |appender|
+    appender.logger = Logger.new(STDOUT)
+  end
+end
+include Hatchet
+
+EntityStore::Config.logger = log
 
 def random_string
   (0...24).map{ ('a'..'z').to_a[rand(26)] }.join

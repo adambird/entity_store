@@ -4,9 +4,9 @@ gem 'rake'
 
 gem 'mongo'
 gem 'bson_ext'
-gem 'hatchet'
 
 group :development, :test do
+  gem 'hatchet'
   gem 'rspec'
   gem 'guard-rspec'
   gem 'growl'

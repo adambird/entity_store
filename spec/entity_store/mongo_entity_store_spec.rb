@@ -39,7 +39,7 @@ describe MongoEntityStore do
       subject
     end
     it "should construct a new entity" do
-      MongoEntityStoreSpec::DummyEntity.should_receive(:new).with({'id' => @id, 'version' => @version})
+      MongoEntityStoreSpec::DummyEntity.should_receive(:new).with({'id' => @id})
       subject
     end
     it "should return the entity" do

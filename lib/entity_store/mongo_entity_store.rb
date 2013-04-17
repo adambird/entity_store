@@ -84,7 +84,7 @@ module EntityStore
       if attrs = entities.find_one('_id' => BSON::ObjectId.from_string(id))
         begin
           entity_type = EntityStore::Config.load_type(attrs['_type'])
-          entity = entity_type.new(attrs['snapshot'] || {'id' => id, 'version' => attrs['version']})
+          entity = entity_type.new(attrs['snapshot'] || {'id' => id })
         rescue => e
           log_error "Error loading type #{attrs['_type']}", e
           raise

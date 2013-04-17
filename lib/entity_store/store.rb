@@ -63,6 +63,7 @@ module EntityStore
     end
 
     def get(id, raise_exception=false)
+      log_debug { "Store#get #{id}"}
       if entity = storage_client.get_entity(id, raise_exception)
 
         storage_client.get_events(id, entity.version).each do |event| 
