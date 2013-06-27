@@ -15,5 +15,7 @@ Gem::Specification.new do |s|
   s.test_files    = Dir["spec/**/*"]
   s.require_paths = ["lib"]
 
-  s.add_dependency('hatchet', '~> 0.0.20')
+  s.add_dependency('mongo', '~> 1.8')
+  s.add_dependency('bson_ext', '~> 1.8')
+  s.add_dependency('hatchet', '~> 0.2')
 end

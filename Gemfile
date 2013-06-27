@@ -1,9 +1,7 @@
 source 'http://rubygems.org'
+gemspec
 
 gem 'rake'
-
-gem 'mongo'
-gem 'bson_ext'
 
 group :development, :test do
   gem 'hatchet'
