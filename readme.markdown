@@ -50,6 +50,8 @@ In order to subscribe to an event then a subscriber must expose a instance metho
 
 eg: a `TyreInflated` event is received by a `tyre_inflated` method.
 
+You can also subscribe to all events by implementing an `all_events` method on a subscriber. If both a matching receiver method and `all_events` are defined on a subscriber, both will be called.
+
 ## Entity Values
 
 The EntityValue module provides extensions to support complex objects as values on attributes. For example.

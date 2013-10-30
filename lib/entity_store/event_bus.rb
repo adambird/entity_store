@@ -2,21 +2,28 @@ module EntityStore
   class EventBus
     include Logging
 
+    ALL_METHOD = :all_events
+
     def publish(entity_type, event)
       publish_to_feed entity_type, event
 
-      subscribers_to(event.receiver_name).each do |s|
-        begin
-          s.new.send(event.receiver_name, event)
-          log_debug { "called #{s.name}##{event.receiver_name} with #{event.inspect}" }
-        rescue => e
-          log_error "#{e.message} when calling #{s.name}##{event.receiver_name} with #{event.inspect}", e
-        end
-      end
+      subscribers_to(event.receiver_name).each do |s| send_to_subscriber s, event.receiver_name, event end
+      subscribers_to_all.each do |s| send_to_subscriber s, ALL_METHOD, event end
+    end
+
+    def send_to_subscriber subscriber, receiver_name, event
+      subscriber.new.send(receiver_name, event)
+      log_debug { "called #{subscriber.name}##{receiver_name} with #{event.inspect}" }
+    rescue => e
+      log_error "#{e.message} when calling #{subscriber.name}##{receiver_name} with #{event.inspect}", e
     end
 
     def subscribers_to(event_name)
       subscribers.select { |s| s.instance_methods.include?(event_name.to_sym) }
+    end
+
+    def subscribers_to_all
+      subscribers.select { |s| s.instance_methods.include?(ALL_METHOD) }
     end
 
     def subscribers
