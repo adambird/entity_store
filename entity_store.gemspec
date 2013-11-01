@@ -10,7 +10,8 @@ Gem::Specification.new do |s|
   s.homepage    = "http://github.com/adambird/entity_store"
   s.description = "Event sourced entity store with a replaceable body"
   s.authors     = ['Adam Bird']
-
+  s.license     = 'GPL-2'
+  
   s.files         = Dir["lib/**/*"]
   s.test_files    = Dir["spec/**/*"]
   s.require_paths = ["lib"]
