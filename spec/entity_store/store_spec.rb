@@ -12,7 +12,7 @@ describe Store do
     before(:each) do
       @new_id = random_string
       @entity = DummyEntityForStore.new(:name => random_string)
-      @storage_client = mock("StorageClient", :add_entity => @new_id)
+      @storage_client = double("StorageClient", :add_entity => @new_id)
       @store = Store.new
       @store.stub(:add_events)
       @store.stub(:storage_client) { @storage_client }
@@ -38,12 +38,12 @@ describe Store do
       @entity = DummyEntityForStore.new(:name => random_string)
       @entity.id = random_string
       @entity.version = random_integer
-      @entity.pending_events << mock(Event, :entity_id= => true, :entity_version= => true)
-      @entity.pending_events << mock(Event, :entity_id= => true, :entity_version= => true)
-      @storage_client = mock("StorageClient", :add_event => true)
+      @entity.pending_events << double(Event, :entity_id= => true, :entity_version= => true)
+      @entity.pending_events << double(Event, :entity_id= => true, :entity_version= => true)
+      @storage_client = double("StorageClient", :add_event => true)
       @store = Store.new
       @store.stub(:storage_client) { @storage_client }
-      @event_bus = mock(EventBus, :publish => true)
+      @event_bus = double(EventBus, :publish => true)
       @store.stub(:event_bus) { @event_bus}
     end
 
@@ -82,7 +82,7 @@ describe Store do
         @entity = DummyEntityForStore.new(:id => random_string)
         @entity.version = random_integer * EntityStore::Config.snapshot_threshold + 1
         @store = Store.new
-        @related_entity = mock('Entity')
+        @related_entity = double('Entity')
         @entity.stub(:loaded_related_entities) { [ @related_entity ] }
         @store.stub(:do_save)
       end
@@ -105,11 +105,11 @@ describe Store do
       @new_id = random_string
       @entity = DummyEntityForStore.new(:id => random_string)
       @entity.version = random_integer * EntityStore::Config.snapshot_threshold
-      @storage_client = mock("StorageClient", :save_entity => true)
+      @storage_client = double("StorageClient", :save_entity => true)
       @store = Store.new
       @store.stub(:add_events)
       @store.stub(:storage_client) { @storage_client }
-      @entity.stub(:pending_events) { [ mock('Event') ] }
+      @entity.stub(:pending_events) { [ double('Event') ] }
     end
 
     subject { @store.do_save(@entity) }
@@ -178,11 +178,11 @@ describe Store do
       @entity = DummyEntityForStore.new(id: random_string, version: random_integer)
       DummyEntityForStore.stub(:new).and_return(@entity)
       @events = [
-        mock("Event", apply: true, entity_version: @entity.version + 1), 
-        mock("Event", apply: true, entity_version: @entity.version + 2)
+        double("Event", apply: true, entity_version: @entity.version + 1), 
+        double("Event", apply: true, entity_version: @entity.version + 2)
       ]
 
-      @storage_client = mock("StorageClient", :get_entity => @entity, :get_events => @events)
+      @storage_client = double("StorageClient", :get_entity => @entity, :get_events => @events)
       @store = Store.new
       @store.stub(:storage_client) { @storage_client }
     end

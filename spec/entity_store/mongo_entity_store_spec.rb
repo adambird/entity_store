@@ -24,10 +24,10 @@ describe MongoEntityStore do
       }
       @entity = MongoEntityStoreSpec::DummyEntity.new
       MongoEntityStoreSpec::DummyEntity.stub(:new) { @entity }
-      @entities_collection = mock('MongoCollection', :find_one => @attrs)
+      @entities_collection = double('MongoCollection', :find_one => @attrs)
       @store.stub(:entities) { @entities_collection }
       @events = [
-        mock('Event', :apply => true, :entity_version => random_integer), mock('Event', :apply => true, :entity_version => random_integer)
+        double('Event', :apply => true, :entity_version => random_integer), double('Event', :apply => true, :entity_version => random_integer)
       ]
       @store.stub(:get_events) { @events }
     end

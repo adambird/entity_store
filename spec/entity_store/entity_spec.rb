@@ -12,9 +12,9 @@ end
 describe Entity do
   describe ".related_entities" do
     before(:each) do
-      @entity_loader = mock(Store)
-      @club = mock('Entity', :id => random_string)
-      @user = mock('Entity', :id => random_string)
+      @entity_loader = double(Store)
+      @club = double('Entity', :id => random_string)
+      @user = double('Entity', :id => random_string)
       @entity = DummyEntity.new(:related_entity_loader => @entity_loader, :club_id => @club.id, :user_id => @user.id)
       @entity_loader.stub(:get) { |id| 
         case id

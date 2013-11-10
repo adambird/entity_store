@@ -15,7 +15,7 @@ module EntityStore
       end
 
       def database
-        @_database ||= URI.parse(MongoEntityStore.connection_profile).path.gsub(/^\//, '')
+        @_database ||= MongoEntityStore.connection_profile.split('/').last
       end
     end
 

@@ -27,7 +27,7 @@ describe EventBus do
     before(:each) do
       @subscriber = DummySubscriber.new
       DummySubscriber.stub(:new) { @subscriber }
-      @subscriber_class2 = mock("SubscriberClass", :instance_methods => ['bilge'], :name => "SubscriberClass")
+      @subscriber_class2 = double("SubscriberClass", :instance_methods => ['bilge'], :name => "SubscriberClass")
       @all_subscriber = DummyAllSubscriber.new
       DummyAllSubscriber.stub(:new) { @all_subscriber }
       @event_bus.stub(:subscribers).and_return([DummySubscriber, @subscriber_class2, DummyAllSubscriber])
@@ -56,7 +56,7 @@ describe EventBus do
   
   describe ".publish_to_feed" do
     before(:each) do
-      @feed_store = mock(ExternalStore)
+      @feed_store = double(ExternalStore)
       @event_bus.stub(:feed_store) { @feed_store }
     end
     
@@ -72,10 +72,10 @@ describe EventBus do
     before(:each) do
       @since = random_time
       @type = 'DummyEvent'
-      @subscriber = mock("Subscriber", :dummy_event => true)
+      @subscriber = double("Subscriber", :dummy_event => true)
       DummySubscriber.stub(:new) { @subscriber }
 
-      @feed_store = mock(ExternalStore)
+      @feed_store = double(ExternalStore)
       @id = random_object_id
       @feed_store.stub(:get_events) { |since| since == @id ? [] : [
         EventDataObject.new('_id' => @id, '_type' => DummyEvent.name, 'name' => random_string) 
