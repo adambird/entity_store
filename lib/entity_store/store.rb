@@ -48,6 +48,10 @@ module EntityStore
       storage_client.remove_entity_snapshot(id)
     end
 
+    def remove_snapshots type=nil
+      storage_client.remove_snapshots type
+    end
+
     def add_events(entity)
       entity.pending_events.each do |e|
         e.entity_id = entity.id.to_s

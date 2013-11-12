@@ -65,6 +65,16 @@ module EntityStore
       entities.update({'_id' => BSON::ObjectId.from_string(id)}, { '$unset' => { 'snapshot' => 1}})
     end
 
+    # Public - remove all snapshots
+    # 
+    # type        - String optional class name for the entity
+    # 
+    def remove_snapshots type=nil
+      query = {}
+      query['_type'] = type if type
+      entities.update(query, { '$unset' => { 'snapshot' => 1 } }, { multi: true })
+    end
+
     def add_event(event)
       events.insert({'_type' => event.class.name, '_entity_id' => BSON::ObjectId.from_string(event.entity_id) }.merge(event.attributes) ).to_s
     end
