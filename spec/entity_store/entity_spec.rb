@@ -1,12 +1,18 @@
 require "spec_helper"
 
+class ThingEntityValue
+  include EntityValue
+
+  attr_accessor :name
+end
+
 class DummyEntity
   include Entity
 
   related_entities :club, :user
 
   attr_accessor :name, :description, :members
-
+  entity_value_array_attribute :things, ThingEntityValue
 end
 
 describe Entity do
@@ -79,7 +85,81 @@ describe Entity do
     subject { @entity.attributes }
 
     it "returns a hash of the attributes" do
-      subject.should eq({:id => @id, :version => @version, :name => @name, :club_id => @club_id, :user_id => @user_id, :description => nil, :members => []})
+      subject.should eq({
+        :id => @id, :version => @version, :name => @name, :club_id => @club_id, 
+        :user_id => @user_id, :description => nil, :members => [], :things => []
+        })
     end
   end
+
+  describe ".entity_value_array_attribute" do
+    let(:entity) { DummyEntity.new }
+
+    describe "setter" do
+      context "with array of hashes" do
+        let(:items) { [{ name: random_string }, { name: random_string }] }
+
+        before(:each) do
+          entity.things = items
+        end
+
+        it "should create the number of items" do
+          entity.things.count.should eq(items.count)
+        end
+        it "should create an array of the correct type" do
+          entity.things.each do |item| item.should be_an_instance_of(ThingEntityValue) end
+        end
+        it "should set the value" do
+          entity.things.each_with_index do |item, i| item.name.should eq(items[i][:name]) end
+        end
+      end
+      context "with an array of matching items" do
+        let(:items) { [ ThingEntityValue.new(name: random_string), ThingEntityValue.new(name: random_string)] }
+
+        before(:each) do
+          entity.things = items
+        end
+
+        it "should create the number of items" do
+          entity.things.count.should eq(items.count)
+        end
+        it "should set items" do
+          entity.things.each_with_index do |item, i| item.should be(items[i]) end
+        end   
+      end
+      context "when something else in array" do
+        let(:items) { [ random_string, random_string ] }
+
+        it "should raise and argument error" do
+          expect { entity.things = items }.to raise_error(ArgumentError)
+        end
+      end
+    end
+
+    describe "getter" do
+      context "when nothing set" do
+        it "should return and empty array" do
+          entity.things.count.should eq(0)
+        end
+      end
+    end
+
+    describe "hash initialisation, ie from snapshot" do
+      let(:attributes) { { things: [ { name: random_string }, { name: random_string } ] } }
+
+      subject { DummyEntity.new(attributes) }
+
+      it "should create the number of items" do
+        subject.things.count.should eq(attributes[:things].count)
+      end
+      it "should create an array of the correct type" do
+        subject.things.each do |item| item.should be_an_instance_of(ThingEntityValue) end
+      end
+      it "should set the value" do
+        subject.things.each_with_index do |item, i| item.name.should eq(attributes[:things][i][:name]) end
+      end
+
+    end
+  end
+
 end

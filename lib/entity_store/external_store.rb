@@ -14,7 +14,7 @@ module EntityStore
       end
 
       def database
-        @_database ||= URI.parse(ExternalStore.connection_profile).path.gsub(/^\//, '')
+        @_database ||= ExternalStore.connection_profile.split('/').last
       end
     end
 
