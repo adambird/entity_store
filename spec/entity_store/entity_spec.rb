@@ -13,6 +13,7 @@ class DummyEntity
 
   attr_accessor :name, :description, :members
   entity_value_array_attribute :things, ThingEntityValue
+  entity_value_dictionary_attribute :other_things, ThingEntityValue
 end
 
 describe Entity do
@@ -79,7 +80,8 @@ describe Entity do
     before(:each) do
       @entity = DummyEntity.new(:id => @id = random_object_id, :club_id => @club_id = random_string, 
         :user_id => @user_id = random_string, :name => @name = random_string, :version => @version = random_integer,
-        :members => [])
+        :members => [], things: [ ThingEntityValue.new(name: random_string), ThingEntityValue.new(name: random_string) ],
+        other_things_dictionary: { random_string => ThingEntityValue.new(name: random_string) } )
     end
 
     subject { @entity.attributes }
@@ -87,8 +89,32 @@ describe Entity do
     it "returns a hash of the attributes" do
       subject.should eq({
         :id => @id, :version => @version, :name => @name, :club_id => @club_id, 
-        :user_id => @user_id, :description => nil, :members => [], :things => []
+        :user_id => @user_id, :description => nil, :members => [], 
+        :things => @entity.things.map { |t| { name: t.name } },
+        :other_things_dictionary => { @entity.other_things_dictionary.keys.first => { name: @entity.other_things_dictionary.values.first.name }}
         })
+    end
+    context "when initialise with attributes" do
+
+      subject { DummyEntity.new(@entity.attributes) }
+
+      it "should set simple attributes" do
+        subject.id.should eq(@entity.id)
+      end
+      it "should set entity value array attributes" do
+        actual = subject
+        actual.things.count.should eq(@entity.things.count)
+        actual.things.each_with_index do |item, i|
+          item.should eq(@entity.things[i])
+        end
+      end
+      it "should set entity value dictionary attributes" do
+        actual = subject
+        actual.other_things_dictionary.keys.count.should eq(@entity.other_things_dictionary.keys.count)
+        actual.other_things_dictionary.each_pair do |k,v|
+          v.should eq(@entity.other_things_dictionary[k])
+        end
+      end
     end
   end
 
@@ -159,6 +185,69 @@ describe Entity do
         subject.things.each_with_index do |item, i| item.name.should eq(attributes[:things][i][:name]) end
       end
 
+    end
+  end
+
+  describe ".entity_value_dictionary_attribute" do
+    let(:ids) { [ random_string, random_string ] }
+    let(:entity) { DummyEntity.new }
+
+    describe "setter" do
+      context "with hashes" do
+        let(:items) { { ids[0] => { name: random_string }, ids[1] => { name: random_string } } }
+
+        before(:each) do
+          entity.other_things_dictionary = items
+        end
+
+        it "should create an items of the correct type" do
+          ids.each do |id| entity.other_things_dictionary[id].should be_an_instance_of(ThingEntityValue) end
+        end
+        it "should set the value" do
+          ids.each do |id| entity.other_things_dictionary[id].name.should eq(items[id][:name]) end
+        end
+      end
+      context "with a hash of typed " do
+        let(:items) { { ids[0] => ThingEntityValue.new(name: random_string), ids[1] => ThingEntityValue.new(name: random_string) } }
+
+        before(:each) do
+          entity.other_things_dictionary = items
+        end
+
+        it "should set items" do
+          ids.each do |id| entity.other_things_dictionary[id].name.should eq(items[id].name) end
+        end   
+      end
+      context "when something else in array" do
+        let(:items) { { ids[0] => random_string, ids[1] => random_string } }
+
+        it "should raise and argument error" do
+          expect { entity.other_things_dictionary = items }.to raise_error(ArgumentError)
+        end
+      end
+    end
+
+    describe "getter" do
+      context "when nothing set" do
+        it "should return and empty array" do
+          entity.other_things_dictionary[random_string].should be_nil
+        end
+      end
+    end
+
+    describe "hash initialisation, ie from snapshot" do
+      let(:attributes) { { other_things_dictionary: { ids[0] => { name: random_string }, ids[1] => { name: random_string } } } } 
+
+      subject { DummyEntity.new(attributes) }
+
+      it "should create an array of the correct type" do
+        entity = subject
+        ids.each do |id| entity.other_things_dictionary[id].should be_an_instance_of(ThingEntityValue) end
+      end
+      it "should set the value" do
+        entity = subject
+        ids.each do |id| entity.other_things_dictionary[id].name.should eq(attributes[:other_things_dictionary][id][:name]) end
+      end
     end
   end
 

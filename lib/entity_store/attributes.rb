@@ -43,6 +43,24 @@ module EntityStore
           end
         end
       end
+
+      def entity_value_dictionary_attribute name, klass
+        define_method("#{name}_dictionary") {
+          instance_variable_get("@_#{name}_dictionary") || instance_variable_set("@_#{name}_dictionary", {})
+        }
+        define_method("#{name}_dictionary=") do |value|
+          value.each_pair do |key, item|
+            case item
+            when Hash
+              send("#{name}_dictionary")[key] = klass.new(item)
+            when klass
+              send("#{name}_dictionary")[key] = item
+            else
+              raise ArgumentError.new("#{item.class.name} not supported. Expecting #{klass.name}")
+            end
+          end
+        end
+      end
     end
   end
 end
