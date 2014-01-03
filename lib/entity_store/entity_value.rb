@@ -14,5 +14,9 @@ module EntityStore
       return true
     end
 
+    def inspect
+      "<#{self.class.name} #{self.attributes.inspect}>"
+    end
+
   end
 end

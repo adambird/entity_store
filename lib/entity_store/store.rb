@@ -70,9 +70,9 @@ module EntityStore
       log_debug { "Store#get #{id}"}
       if entity = storage_client.get_entity(id, raise_exception)
 
-        storage_client.get_events(id, entity.version).each do |event| 
+        storage_client.get_events(id, entity.version).each do |event|
           begin
-            event.apply(entity) 
+            event.apply(entity)
             log_debug { "Applied #{event.inspect} to #{id}" }
           rescue => e
             log_error "Failed to apply #{event.class.name} #{event.attributes} to #{id} with #{e.inspect}", e
@@ -97,5 +97,54 @@ module EntityStore
     def event_bus
       @_event_bus ||= EventBus.new
     end
+
+    # Public : returns an array representing a full audit trail for the entity.
+    # After each event is applied the state of the entity is rendered.
+    # Optionally accepts a block which should return true or false to indicate
+    # whether to render the line. The block yields entity, event, lines collection
+    def get_audit(id, output=nil)
+      lines = []
+
+      if entity = storage_client.get_entity(id, true)
+
+        lines << "---"
+        lines << entity.inspect
+        lines << "---"
+
+        storage_client.get_events(id, entity.version).each do |event|
+
+          begin
+            event.apply(entity)
+            entity.version = event.entity_version
+
+            render = true
+
+            if block_given?
+              render = yield(entity, event, lines)
+            end
+
+            if render
+              lines << event.inspect
+              lines << entity.inspect
+
+              lines << "---"
+            end
+
+          rescue => e
+            lines << "ERROR #{e.class.name} #{e.message}"
+          end
+        end
+
+      else
+        lines << "No entity for #{id}"
+      end
+
+      if output
+        output.write lines.join("\n")
+      else
+        lines
+      end
+    end
+
   end
 end

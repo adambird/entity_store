@@ -1,7 +1,7 @@
 module EntityStore
   module Entity
     attr_accessor :id
-    
+
     def self.included(klass)
       klass.class_eval do
         include HashSerialization
@@ -36,7 +36,7 @@ module EntityStore
     def type
       self.class.name
     end
-  
+
     def version
       @_version ||= 1
     end
@@ -50,23 +50,26 @@ module EntityStore
     def related_entity_loader=(value)
       @_related_entity_loader = value
     end
-    
+
     def pending_events
       @pending_events ||= []
     end
-  
+
     def clear_pending_events
-      @pending_events = []  
+      @pending_events = []
     end
 
     def record_event(event)
       apply_event(event)
       pending_events<<event
     end
-  
+
     def apply_event(event)
       event.apply(self)
     end
 
+    def inspect
+      "<#{self.class.name} #{self.attributes.inspect}>"
+    end
   end
 end
