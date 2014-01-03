@@ -69,7 +69,7 @@ module EntityStore
     end
 
     def inspect
-      "<#{self.class.name} #{self.attributes.inspect}>"
+      "<#{self.class.name} #{id} #{self.attributes.inspect}>"
     end
   end
 end
