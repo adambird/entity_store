@@ -86,7 +86,7 @@ describe Store do
         @entity.stub(:loaded_related_entities) { [ @related_entity ] }
         @store.stub(:do_save)
       end
-      
+
       subject { @store.save(@entity) }
 
       it "should save the entity" do
@@ -130,6 +130,10 @@ describe Store do
     end
     it "should not snapshot the entity" do
       @store.should_not_receive(:snapshot_entity)
+      subject
+    end
+    it "should publish a version incremented event" do
+      @store.event_bus.should_receive(:publish).with(@entity.type, an_instance_of(DummyEntityForStoreVersionIncremented))
       subject
     end
 
@@ -178,7 +182,7 @@ describe Store do
       @entity = DummyEntityForStore.new(id: random_string, version: random_integer)
       DummyEntityForStore.stub(:new).and_return(@entity)
       @events = [
-        double("Event", apply: true, entity_version: @entity.version + 1), 
+        double("Event", apply: true, entity_version: @entity.version + 1),
         double("Event", apply: true, entity_version: @entity.version + 2)
       ]
 

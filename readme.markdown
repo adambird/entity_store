@@ -38,13 +38,13 @@ class TyreInflated
 end
 ```
 
-The `record_event` method adds the event to the entity's `pending_events` queue and applies the event. 
+The `record_event` method adds the event to the entity's `pending_events` queue and applies the event.
 
 The entity is passed the an instance of the entity store via the `save` method (new entities use `add`). This results in the pending events being persisted to the `entity_events` collection in the configured MongoDB repository.
 
 ## Subscribing to events
 
-In order to denormalise the event subscribers need to be configured to receive events that are published to the internal event bus. 
+In order to denormalise the event subscribers need to be configured to receive events that are published to the internal event bus.
 
 In order to subscribe to an event then a subscriber must expose a instance method matching the event's receiver_name. This is, by default the lower case event class name with underscores between words
 
@@ -59,15 +59,15 @@ The EntityValue module provides extensions to support complex objects as values 
 ```ruby
 class Address
 	include EntityStore::EntityValue
-	
+
 	attr_accessor :street, :town, :county, :post_code, :country
 end
 
 class HomeAddressSet
 	include EntityStore::Event
-	
+
 	entity_value_attribute :home_address, Address
-	
+
 	def	apply(entity)
 		entity.home_address = home_address
 	end
@@ -75,7 +75,7 @@ end
 
 class Member
 	include EntityStore::Entity
-	
+
 	attr_accessor :first_name, :last_name
 	entity_value_attribute :home_address, Address
 
@@ -86,6 +86,22 @@ end
 ```
 
 You'll note that a class method `entity_value_attribute` is used to mark up the entity and event correctly. Slightly uncomfortable that this isn't a poro (plain old ruby object) class. This is my solution to robust serialisation of these objects. There could well be a better way.
+
+## Version Changes
+
+An entity version increment can comprise several events. When a version is incremented, ie after save, an event is raised of class
+
+```
+<entity_class_name>VersionIncremented
+```
+
+In the case of the `Member` entity above this would be
+
+```
+MemberVersionIncremented
+```
+
+This will contain two properties `#entity_id` and `#version`.
 
 ## Snapshotting
 
@@ -123,7 +139,7 @@ You can also override the type loader used by passing a lambda or a Proc. Handy 
 
 ``` ruby
   config.type_loader = lambda {|type_name|
-    begin 
+    begin
       type_name.split('::').inject(Object) {|obj, name| obj.const_get(name) }
     rescue NameError => e
       "NewNamespace::#{type_name}".split('::').inject(Object) {|obj, name| obj.const_get(name) }
@@ -144,7 +160,7 @@ class MyStore
 	#
 	# Returns String id of the entity
 	def add_entity(entity)
-	  
+
 	end
 
 	def save_entity(entity)
@@ -159,13 +175,13 @@ class MyStore
 	def add_event(event)
 
 	end
-	
+
 	def get_events(id, since_version=nil)
 		# returns all events in time sequence since the version if passed otherwise all
 	end
 
 	def snapshot_entity(entity)
-		# create a snapshot of the entity that can be retrievd without replaying 
+		# create a snapshot of the entity that can be retrievd without replaying
 		# the entire event stream
 	end
 
@@ -177,13 +193,13 @@ class MyStore
 end
 ```
 
-You can also replace the `EntityStore.feed_store` with 
+You can also replace the `EntityStore.feed_store` with
 
 ```ruby
 class MyFeedStore
-	
+
 	def add_event(entity_type, event)
-		# entity_type is a string 
+		# entity_type is a string
 	end
 
 	def get_events(since, type=nil, max_items=nil)
@@ -198,4 +214,4 @@ end
 + Concurrency - actually do something with the version of the entity
 + Backup - make copy of all events to external store
 + Restore - restore all backed up events
-		
+

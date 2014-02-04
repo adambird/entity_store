@@ -7,6 +7,20 @@ module EntityStore
         include HashSerialization
         include Attributes
         extend ClassMethods
+
+        version_incremented_event_class = "#{self.name}VersionIncremented".split('::').inject(Object) {|obj, name|
+            obj.const_defined?(name) ? obj.const_get(name) : obj.const_set(name, Class.new)
+          }
+
+        version_incremented_event_class.class_eval %Q"
+          include ::EntityStore::Event
+
+          attr_accessor :version
+
+          def apply(entity)
+            # nothing to do as signal event
+          end
+        "
       end
     end
 
@@ -30,7 +44,6 @@ module EntityStore
           names.collect{ |name| instance_variable_get("@_#{name}") }.select{|entity| !entity.nil? }
         }
       end
-
     end
 
     def type
@@ -43,6 +56,11 @@ module EntityStore
 
     def version=(value)
       @_version = value
+    end
+
+    def generate_version_incremented_event
+      event_class= "#{self.class.name}VersionIncremented".split('::').inject(Object) {|obj, name| obj.const_get(name) }
+      event_class.new(:entity_id => id, :version => version)
     end
 
     # Holds a reference to the store used to load this entity so the same store

@@ -9,6 +9,10 @@ module EntityStore
     def add(entity)
       entity.id = storage_client.add_entity(entity)
       add_events(entity)
+
+      # publish version increment signal event to the bus
+      event_bus.publish(entity.type, entity.generate_version_incremented_event)
+
       entity
     rescue => e
       logger.error { "Store#add error: #{e.inspect} - #{entity.inspect}" }
@@ -32,6 +36,9 @@ module EntityStore
         end
         add_events(entity)
         snapshot_entity(entity) if entity.version % Config.snapshot_threshold == 0
+
+        # publish version increment signal event to the bus
+        event_bus.publish(entity.type, entity.generate_version_incremented_event)
       end
       entity
     rescue => e
