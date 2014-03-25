@@ -7,7 +7,13 @@ end
 
 class DummySubscriber
   def dummy_event
-    
+
+  end
+end
+
+class DummyStringSubscriber
+  def dummy_event
+
   end
 end
 
@@ -27,17 +33,23 @@ describe EventBus do
     before(:each) do
       @subscriber = DummySubscriber.new
       DummySubscriber.stub(:new) { @subscriber }
+      @string_subscriber = DummyStringSubscriber.new
+      DummyStringSubscriber.stub(:new) { @string_subscriber }
       @subscriber_class2 = double("SubscriberClass", :instance_methods => ['bilge'], :name => "SubscriberClass")
       @all_subscriber = DummyAllSubscriber.new
       DummyAllSubscriber.stub(:new) { @all_subscriber }
-      @event_bus.stub(:subscribers).and_return([DummySubscriber, @subscriber_class2, DummyAllSubscriber])
+      EntityStore::Config.stub(:event_subscribers).and_return([DummySubscriber, @subscriber_class2, DummyAllSubscriber, 'DummyStringSubscriber'])
       @event_bus.stub(:publish_to_feed)
     end
-    
+
     subject { @event_bus.publish(@entity_type, @event) }
-    
+
     it "calls the receiver method on the subscriber" do
       @subscriber.should_receive(:dummy_event).with(@event)
+      subject
+    end
+    it "calls the receiver method on the string-resolved subscriber" do
+      @string_subscriber.should_receive(:dummy_event).with(@event)
       subject
     end
     it "should not create an instance of a class without the receiver method" do
@@ -53,15 +65,15 @@ describe EventBus do
       subject
     end
   end
-  
+
   describe ".publish_to_feed" do
     before(:each) do
       @feed_store = double(ExternalStore)
       @event_bus.stub(:feed_store) { @feed_store }
     end
-    
+
     subject { @event_bus.publish_to_feed @entity_type, @event }
-    
+
     it "should publish to the external store" do
       @feed_store.should_receive(:add_event).with(@entity_type, @event)
       subject
@@ -78,10 +90,10 @@ describe EventBus do
       @feed_store = double(ExternalStore)
       @id = random_object_id
       @feed_store.stub(:get_events) { |since| since == @id ? [] : [
-        EventDataObject.new('_id' => @id, '_type' => DummyEvent.name, 'name' => random_string) 
+        EventDataObject.new('_id' => @id, '_type' => DummyEvent.name, 'name' => random_string)
       ]}
       @event_bus.stub(:feed_store) { @feed_store }
-    end 
+    end
 
     subject { @event_bus.replay(@since, @type, DummySubscriber) }
 

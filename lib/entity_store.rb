@@ -1,5 +1,6 @@
 module EntityStore
 
+  require_relative 'entity_store/utils'
   require_relative 'entity_store/logging'
   require_relative 'entity_store/config'
   require_relative 'entity_store/time_factory'
