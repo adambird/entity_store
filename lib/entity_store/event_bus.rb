@@ -27,7 +27,14 @@ module EntityStore
     end
 
     def subscribers
-      EntityStore::Config.event_subscribers
+      EntityStore::Config.event_subscribers.map do |subscriber|
+        case subscriber
+        when String
+          Utils.get_type_constant(subscriber)
+        else
+          subscriber
+        end
+      end
     end
 
     def publish_to_feed(entity_type, event)
