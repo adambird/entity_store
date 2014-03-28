@@ -4,7 +4,7 @@ module MongoEntityStoreSpec
   class DummyEntity
     include EntityStore::Entity
 
-    attr_accessor :name, :description
+    attr_accessor :by, :name, :description
 
   end
 end
@@ -92,8 +92,10 @@ describe MongoEntityStore do
       saved_entity = @store.entities.find_one({'_id' => BSON::ObjectId.from_string(@entity.id)})['snapshot']
       saved_entity['id'].should eq(@entity.id)
       saved_entity['version'].should eq(@entity.version)
+      saved_entity['by'].should be_nil
       saved_entity['name'].should eq(@entity.name)
       saved_entity['description'].should eq(@entity.description)
+      saved_entity.keys.should_not include 'by'
     end
   end
 end
