@@ -55,7 +55,7 @@ module EntityStore
     # 
     def snapshot_entity(entity)
       query = {'_id' => BSON::ObjectId.from_string(entity.id)}
-      updates = { '$set' => { 'snapshot' => entity.attributes } }
+      updates = { '$set' => { 'snapshot' => cleansed_attributes(entity) } }
       entities.update(query, updates, { :upsert => true} )
     end
 
@@ -76,7 +76,7 @@ module EntityStore
     end
 
     def add_event(event)
-      events.insert({'_type' => event.class.name, '_entity_id' => BSON::ObjectId.from_string(event.entity_id) }.merge(event.attributes) ).to_s
+      events.insert({'_type' => event.class.name, '_entity_id' => BSON::ObjectId.from_string(event.entity_id) }.merge(cleansed_attributes(event)) ).to_s
     end
 
     def get_entity!(id)
@@ -129,5 +129,16 @@ module EntityStore
       end.select { |e| !e.nil? }
     end
 
+    private
+
+    # Private: Returns a cleansed version of the entities attributes.
+    #
+    # As Mongo documents return nil when an unknown key is requested, there is
+    # no need to explicitly store them, incurring the overhead of an additional
+    # key in the document.
+    #
+    def cleansed_attributes(entity)
+      entity.attributes.delete_if { |key, value| value.nil? }
+    end
   end
 end
