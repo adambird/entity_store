@@ -35,5 +35,5 @@ def random_time
 end
 
 def random_object_id
-  BSON::ObjectId.from_time(random_time).to_s
+  BSON::ObjectId.from_time(random_time, :unique => true).to_s
 end
