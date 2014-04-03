@@ -52,7 +52,7 @@ module EntityStore
     end
 
     # Public - create a snapshot of the entity and store in the entities collection
-    # 
+    #
     def snapshot_entity(entity)
       query = {'_id' => BSON::ObjectId.from_string(entity.id)}
       updates = { '$set' => { 'snapshot' => entity.attributes } }
@@ -60,15 +60,15 @@ module EntityStore
     end
 
     # Public - remove the snapshot for an entity
-    # 
+    #
     def remove_entity_snapshot(id)
       entities.update({'_id' => BSON::ObjectId.from_string(id)}, { '$unset' => { 'snapshot' => 1}})
     end
 
     # Public - remove all snapshots
-    # 
+    #
     # type        - String optional class name for the entity
-    # 
+    #
     def remove_snapshots type=nil
       query = {}
       query['_type'] = type if type
@@ -85,10 +85,10 @@ module EntityStore
 
     # Public - loads the entity from the store, including any available snapshots
     # then loads the events to complete the state
-    # 
+    #
     # id                - String representation of BSON::ObjectId
     # raise_exception   - Boolean indicating whether to raise an exception if not found (default=false)
-    # 
+    #
     # Returns an object of the entity type
     def get_entity(id, raise_exception=false)
       if attrs = entities.find_one('_id' => BSON::ObjectId.from_string(id))
@@ -99,7 +99,7 @@ module EntityStore
           log_error "Error loading type #{attrs['_type']}", e
           raise
         end
-        
+
         entity
       else
         raise NotFound.new(id) if raise_exception
@@ -111,23 +111,24 @@ module EntityStore
     end
 
     def get_events(id, since_version=nil)
-
       query = { '_entity_id' => BSON::ObjectId.from_string(id) }
+
       query['entity_version'] = { '$gt' => since_version } if since_version
 
       options = {
         :sort => [['entity_version', Mongo::ASCENDING], ['_id', Mongo::ASCENDING]]
       }
 
-      events.find(query, options).collect do |attrs|
+      loaded_events = events.find(query, options).collect do |attrs|
         begin
           EntityStore::Config.load_type(attrs['_type']).new(attrs)
         rescue => e
           log_error "Error loading type #{attrs['_type']}", e
           nil
         end
-      end.select { |e| !e.nil? }
-    end
+      end
 
+      loaded_events.compact
+    end
   end
 end
