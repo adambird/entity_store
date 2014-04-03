@@ -56,6 +56,15 @@ module EntityStore
     def snapshot_entity(entity)
       query = {'_id' => BSON::ObjectId.from_string(entity.id)}
       updates = { '$set' => { 'snapshot' => entity.attributes } }
+
+      if entity.class.respond_to? :entity_store_snapshot_key
+        # If there is a snapshot key, store it too
+        updates['$set']['snapshot_key'] = entity.class.entity_store_snapshot_key
+      else
+        # Otherwise, make sure there isn't one set
+        updates['$unset'] = { 'snapshot_key' => '' }
+      end
+
       entities.update(query, updates, { :upsert => true} )
     end
 
@@ -94,6 +103,14 @@ module EntityStore
       if attrs = entities.find_one('_id' => BSON::ObjectId.from_string(id))
         begin
           entity_type = EntityStore::Config.load_type(attrs['_type'])
+
+          # Check if there is a snapshot key in use
+          if entity_type.respond_to? :entity_store_snapshot_key
+            active_key = entity_type.entity_store_snapshot_key
+            # Discard the snapshot if the keys don't match
+            attrs.delete('snapshot') unless active_key == attrs['snapshot_key']
+          end
+
           entity = entity_type.new(attrs['snapshot'] || {'id' => id })
         rescue => e
           log_error "Error loading type #{attrs['_type']}", e

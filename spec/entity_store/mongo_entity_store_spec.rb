@@ -11,6 +11,16 @@ describe MongoEntityStore do
     end
   end
 
+  class DummyEntityWithSnapshotKey < DummyEntity
+    def self.entity_store_snapshot_key
+      @entity_store_snapshot_key ||= 1
+    end
+
+    def self.increment_entity_store_snapshot_key!
+      @entity_store_snapshot_key = entity_store_snapshot_key + 1
+    end
+  end
+
   class DummyEntityNameSet
     include EntityStore::Event
 
@@ -77,8 +87,10 @@ describe MongoEntityStore do
   end
 
   describe "#get_entity" do
+    let(:entity_class) { DummyEntity }
+
     let(:saved_entity) do
-      entity = DummyEntity.new(:name => random_string, :description => random_string)
+      entity = entity_class.new(:name => random_string, :description => random_string)
       entity.id = store.add_entity(entity)
       entity
     end
@@ -105,11 +117,34 @@ describe MongoEntityStore do
 
     context "when a snapshot exists" do
       before do
+        saved_entity.version = 10
         store.snapshot_entity(saved_entity)
       end
 
-      it "should have set the name" do
-        subject.name.should == saved_entity.name
+      context "when a snapshot key not in use" do
+        it "should have set the name" do
+          subject.name.should == saved_entity.name
+        end
+      end
+
+      context "when a snapshot key is in use" do
+        let(:entity_class) { DummyEntityWithSnapshotKey }
+
+        context "when the key matches the class's key" do
+          it "should have set the name" do
+            subject.name.should == saved_entity.name
+          end
+        end
+
+        context "when the key does not match the class's key" do
+          before do
+            entity_class.increment_entity_store_snapshot_key!
+          end
+
+          it "should ignore the invalidated snapshot" do
+            subject.name.should be_nil
+          end
+        end
       end
     end
   end
@@ -133,19 +168,35 @@ describe MongoEntityStore do
   end
 
   describe "#snapshot_entity" do
+    let(:entity_class) { DummyEntity }
+
     let(:entity) do
-      DummyEntity.new(:id => random_object_id, :version => random_integer, :name => random_string)
+      entity_class.new(:id => random_object_id, :version => random_integer, :name => random_string)
+    end
+
+    let(:saved_entity) do
+      store.entities.find_one({'_id' => BSON::ObjectId.from_string(entity.id)})
     end
 
     subject { store.snapshot_entity(entity) }
 
     it "should add a snaphot to the entity record" do
       subject
-      saved_entity = store.entities.find_one({'_id' => BSON::ObjectId.from_string(entity.id)})['snapshot']
-      saved_entity['id'].should eq(entity.id)
-      saved_entity['version'].should eq(entity.version)
-      saved_entity['name'].should eq(entity.name)
-      saved_entity['description'].should eq(entity.description)
+      snapshot = saved_entity['snapshot']
+
+      snapshot['id'].should eq(entity.id)
+      snapshot['version'].should eq(entity.version)
+      snapshot['name'].should eq(entity.name)
+      snapshot['description'].should eq(entity.description)
+    end
+
+    context "entity with snapshot key" do
+      let(:entity_class) { DummyEntityWithSnapshotKey }
+
+      it "should store the snapshot key" do
+        subject
+        saved_entity['snapshot_key'].should == entity.class.entity_store_snapshot_key
+      end
     end
   end
 end
