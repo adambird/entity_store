@@ -2,7 +2,16 @@ module EntityStore
   module HashSerialization
 
     def initialize(attr={})
-      attr.each { |item| send("#{item[0]}=", item[1]) if respond_to?("#{item[0]}=") }
+      values = attr
+      values = values.attributes if values.respond_to? :attributes
+
+      unless values.is_a? Hash
+        raise "Do not know how to create #{self.class} from #{attr.class}"
+      end
+
+      values.each do |key, value|
+        send("#{key}=", value) if respond_to?("#{key}=")
+      end
     end
 
     # Public - generate attributes hash 

@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    entity_store (0.2.13)
+    entity_store (0.2.14)
       bson_ext (~> 1.8)
       hatchet (~> 0.2)
       mongo (~> 1.8)

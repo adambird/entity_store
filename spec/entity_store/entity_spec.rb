@@ -116,6 +116,38 @@ describe Entity do
         end
       end
     end
+
+    context "when initialize with entity" do
+      subject { DummyEntity.new(@entity) }
+
+      it "should set simple attributes" do
+        subject.id.should eq(@entity.id)
+      end
+
+      it "should set entity value array attributes" do
+        actual = subject
+        actual.things.count.should eq(@entity.things.count)
+        actual.things.each_with_index do |item, i|
+          item.should eq(@entity.things[i])
+        end
+      end
+
+      it "should set entity value dictionary attributes" do
+        actual = subject
+        actual.other_things_dictionary.keys.count.should eq(@entity.other_things_dictionary.keys.count)
+        actual.other_things_dictionary.each_pair do |k,v|
+          v.should eq(@entity.other_things_dictionary[k])
+        end
+      end
+    end
+
+    context "when initialize with something unknown" do
+      subject { DummyEntity.new(1) }
+
+      it "should raise a readable error" do
+        expect { subject }.to raise_error(RuntimeError, "Do not know how to create DummyEntity from Fixnum")
+      end
+    end
   end
 
   describe ".entity_value_array_attribute" do
