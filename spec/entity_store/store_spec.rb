@@ -77,30 +77,7 @@ describe Store do
   end
 
   describe "#save" do
-    context "when entity has related entities loaded" do
-      before(:each) do
-        @entity = DummyEntityForStore.new(:id => random_string)
-        @entity.version = random_integer * EntityStore::Config.snapshot_threshold + 1
-        @store = Store.new
-        @related_entity = double('Entity')
-        @entity.stub(:loaded_related_entities) { [ @related_entity ] }
-        @store.stub(:do_save)
-      end
 
-      subject { @store.save(@entity) }
-
-      it "should save the entity" do
-        @store.should_receive(:do_save).with(@entity)
-        subject
-      end
-      it "should save them as well" do
-        @store.should_receive(:do_save).with(@related_entity)
-        subject
-      end
-    end
-  end
-
-  describe "#do_save" do
     before(:each) do
       @new_id = random_string
       @entity = DummyEntityForStore.new(:id => random_string)
@@ -112,7 +89,7 @@ describe Store do
       @entity.stub(:pending_events) { [ double('Event') ] }
     end
 
-    subject { @store.do_save(@entity) }
+    subject { @store.save(@entity) }
 
     it "increments the entity version number" do
       expect { subject }.to change { @entity.version }.by 1
@@ -197,11 +174,7 @@ describe Store do
       @storage_client.should_receive(:get_entity).with(@id, false)
       subject
     end
-    it "should assign itself as the related_entity_loader" do
-      @entity.should_receive(:related_entity_loader=).with(@store)
-      subject
-    end
-    it "should return a ride" do
+    it "should return the entity" do
       subject.should eq(@entity)
     end
     it "should retrieve it's events" do

@@ -20,12 +20,6 @@ module EntityStore
     end
 
     def save(entity)
-      do_save entity
-      entity.loaded_related_entities.each do |e| do_save e end if entity.respond_to?(:loaded_related_entities)
-      entity
-    end
-
-    def do_save(entity)
       # need to look at concurrency if we start storing version on client
       unless entity.pending_events.empty?
         entity.version += 1
@@ -42,7 +36,7 @@ module EntityStore
       end
       entity
     rescue => e
-      log_error "Store#do_save error: #{e.inspect} - #{entity.inspect}", e
+      log_error "Store#save error: #{e.inspect} - #{entity.inspect}", e
       raise e
     end
 
@@ -87,8 +81,6 @@ module EntityStore
           entity.version = event.entity_version
         end
 
-        # assign this entity loader to allow lazy loading of related entities
-        entity.related_entity_loader = self
       end
       entity
     end
