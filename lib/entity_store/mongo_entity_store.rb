@@ -100,7 +100,29 @@ module EntityStore
     #
     # Returns an object of the entity type
     def get_entity(id, raise_exception=false)
-      if attrs = entities.find_one('_id' => BSON::ObjectId.from_string(id))
+      options = {
+        raise_exception: raise_exception
+      }
+      if entity = get_entities([id], options).first
+        entity
+      else
+        raise NotFound.new(id) if options[:raise_exception]
+        nil
+      end
+    end
+
+    def get_entities(ids, options={})
+
+      object_ids = ids.map do |id|
+        begin
+          BSON::ObjectId.from_string(id)
+        rescue BSON::InvalidObjectId
+          raise NotFound.new(id) if options[:raise_exception]
+          nil
+        end
+      end
+
+      entities.find('_id' => { '$in' => object_ids }).map do |attrs|
         begin
           entity_type = EntityStore::Config.load_type(attrs['_type'])
 
@@ -111,41 +133,57 @@ module EntityStore
             attrs.delete('snapshot') unless active_key == attrs['snapshot_key']
           end
 
-          entity = entity_type.new(attrs['snapshot'] || {'id' => id })
+          entity = entity_type.new(attrs['snapshot'] || {'id' => attrs['_id'].to_s })
         rescue => e
           log_error "Error loading type #{attrs['_type']}", e
           raise
         end
 
         entity
-      else
-        raise NotFound.new(id) if raise_exception
-        nil
       end
-    rescue BSON::InvalidObjectId
-      raise NotFound.new(id) if raise_exception
-      nil
     end
 
+    # Public  - get events for a single entity
+    # Returns - Array of Event instances
     def get_events(id, since_version=nil)
-      query = { '_entity_id' => BSON::ObjectId.from_string(id) }
+      get_events_for_criteria( [ { id: id, since_version: since_version} ] )[id]
+    end
 
-      query['entity_version'] = { '$gt' => since_version } if since_version
-
-      options = {
-        :sort => [['entity_version', Mongo::ASCENDING], ['_id', Mongo::ASCENDING]]
-      }
-
-      loaded_events = events.find(query, options).collect do |attrs|
-        begin
-          EntityStore::Config.load_type(attrs['_type']).new(attrs)
-        rescue => e
-          log_error "Error loading type #{attrs['_type']}", e
-          nil
-        end
+    # Public -  get events for an array of criteria objects
+    #           because each entity could have a different reference
+    #           version this allows optional criteria to be specifed
+    #
+    #
+    # criteria  - Hash :id mandatory, :since_version optional
+    #
+    # eg: get_events_for_criteria([ { id: "23232323"}, { id: "2398429834", since_version: 4 } ] )
+    #
+    # Returns   - Hash with id as key and Array of Event instances as value
+    #
+    def get_events_for_criteria(criteria)
+      query_items = criteria.map do |item|
+        raise ArgumentError.new(":id missing from criteria") unless item[:id]
+        item_query = { '_entity_id' => BSON::ObjectId.from_string(item[:id]) }
+        item_query['entity_version'] = { '$gt' => item[:since_version] } if item[:since_version]
+        item_query
       end
 
-      loaded_events.compact
+      query = { '$or' => query_items }
+
+      options = {
+        :sort => [['_entity_id', Mongo::ASCENDING], ['entity_version', Mongo::ASCENDING], ['_id', Mongo::ASCENDING]]
+      }
+
+      result = Hash[ criteria.map { |item| [ item[:id], [] ] } ]
+
+      events.find(query, options).each do |attrs|
+        begin
+          result[attrs['_entity_id'].to_s] << EntityStore::Config.load_type(attrs['_type']).new(attrs)
+        rescue => e
+          log_error "Error loading type #{attrs['_type']}", e
+        end
+      end
+      result
     end
   end
 end
