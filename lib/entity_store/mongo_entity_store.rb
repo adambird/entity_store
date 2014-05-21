@@ -92,13 +92,6 @@ module EntityStore
       get_entity(id, true)
     end
 
-    # Public - loads the entity from the store, including any available snapshots
-    # then loads the events to complete the state
-    #
-    # id                - String representation of BSON::ObjectId
-    # raise_exception   - Boolean indicating whether to raise an exception if not found (default=false)
-    #
-    # Returns an object of the entity type
     def get_entity(id, raise_exception=false)
       options = {
         raise_exception: raise_exception
@@ -111,6 +104,16 @@ module EntityStore
       end
     end
 
+    # Public - loads the entity from the store, including any available snapshots
+    # then loads the events to complete the state
+    #
+    # ids           - Array of Strings representation of BSON::ObjectId
+    # options       - Hash of options
+    #               {
+    #                 :raise_exceptions => Boolean
+    #               }
+    #
+    # Returns an object of the entity type
     def get_entities(ids, options={})
 
       object_ids = ids.map do |id|

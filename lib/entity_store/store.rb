@@ -68,10 +68,18 @@ module EntityStore
     end
 
     def get(id, raise_exception=false)
-      log_debug { "Store#get #{id}"}
-      if entity = storage_client.get_entity(id, raise_exception)
+      options = {
+        raise_exception: raise_exception
+      }
 
-        storage_client.get_events(id, entity.version).each do |event|
+      get_with_ids([id], options).first
+    end
+
+    def get_with_ids(ids, options={})
+
+      storage_client.get_entities(ids, options).map do |entity|
+
+        storage_client.get_events(entity.id, entity.version).each do |event|
           begin
             event.apply(entity)
             log_debug { "Applied #{event.inspect} to #{id}" }
@@ -80,9 +88,9 @@ module EntityStore
           end
           entity.version = event.entity_version
         end
-
+        entity
       end
-      entity
+
     end
 
     # Public : USE AT YOUR PERIL this clears the ENTIRE data store
