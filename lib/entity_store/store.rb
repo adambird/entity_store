@@ -86,19 +86,19 @@ module EntityStore
 
       entities = storage_client.get_entities(ids, options)
 
-      criteria = entities
-        .reject { |id, entity| entity.nil? }
-        .map  do |id, entity|
-          { id: id, since_version: entity.version }
+      if options.fetch(:raise_exception, true)
+        ids.each do |id|
+          raise NotFound.new(id) unless entities[id]
         end
+      end
+
+      criteria = entities.map do |id, entity|
+        { id: id, since_version: entity.version }
+      end
 
       events = storage_client.get_events(criteria)
 
       entities.each do |id, entity|
-        unless entity
-          raise NotFound.new(id) if options.fetch(:raise_exception, true)
-          next
-        end
 
         events[id].each do |event|
           begin
