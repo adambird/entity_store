@@ -5,6 +5,11 @@ require 'hatchet'
 
 require "#{Rake.application.original_dir}/lib/entity_store"
 
+# support files
+Dir[("#{Rake.application.original_dir}/spec/support/**/*.rb")].each do |f|
+  require f
+end
+
 RSpec.configure do |config|
   config.color_enabled = true
 end
