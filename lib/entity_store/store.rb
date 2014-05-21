@@ -75,28 +75,52 @@ module EntityStore
       get_with_ids([id], options).first
     end
 
+    # Public - get a series of entities
+    #
+    # ids           - Array of id strings
+    # options       - Hash of options
+    #               {
+    #                 :raise_exceptions => Boolean
+    #               }
+    #
+    # Returns and Array of entities
     def get_with_ids(ids, options={})
 
-      storage_client.get_entities(ids, options).map do |entity|
+      entities = storage_client.get_entities(ids, options)
 
-        storage_client.get_events(entity.id, entity.version).each do |event|
+      criteria = entities.map { |e| { id: e.id, since_version: e.version } }
+
+      storage_client.get_events_for_criteria(criteria).each_pair do |id, events|
+
+        unless entity = entities.find { |e| e.id == id }
+          raise "Unexpected entity with id=#{id} returned" if options[:raise_exception]
+          next
+        end
+
+        events.each do |event|
           begin
             event.apply(entity)
             log_debug { "Applied #{event.inspect} to #{id}" }
           rescue => e
             log_error "Failed to apply #{event.class.name} #{event.attributes} to #{id} with #{e.inspect}", e
+            raise if options[:raise_exception]
           end
           entity.version = event.entity_version
         end
-        entity
       end
 
+      entities
     end
 
     # Public : USE AT YOUR PERIL this clears the ENTIRE data store
     #
+    # confirm     - Symbol that must equal :i_am_sure
+    #
     # Returns nothing
-    def clear_all
+    def clear_all(confirm)
+      unless confirm == :i_am_sure
+        raise "#clear_all call with :i_am_sure in order to do this"
+      end
       storage_client.clear
       @_storage_client = nil
     end

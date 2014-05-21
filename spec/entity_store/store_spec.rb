@@ -168,7 +168,7 @@ describe Store do
       end ]
     end
 
-    let(:storage_client) { double("StorageClient", :get_entities => entities) }
+    let(:storage_client) { double("StorageClient") }
     let(:store) { Store.new }
 
     before(:each) do
@@ -176,8 +176,8 @@ describe Store do
         entities.select { |e| ids.include?(e.id) }
       end
 
-      storage_client.stub(:get_events) do |id|
-        events[id]
+      storage_client.stub(:get_events_for_criteria) do |criteria|
+        Hash[ criteria.map { |c| [ c[:id], events[c[:id]] ] }]
       end
       store.stub(:storage_client) { storage_client }
     end
@@ -193,10 +193,6 @@ describe Store do
       end
       it "should return the entity" do
         subject.id.should eq(entity.id)
-      end
-      it "should retrieve it's events" do
-        storage_client.should_receive(:get_events).with(id, entity.version)
-        subject
       end
       it "should apply each event to the entity" do
         events[id].each do |event|
@@ -220,12 +216,6 @@ describe Store do
       end
       it "should return the entities" do
         subject.map { |e| e.id }.should eq(ids)
-      end
-      it "should retrieve it's events" do
-        entities.each do |entity|
-          storage_client.should_receive(:get_events).with(entity.id, entity.version)
-        end
-        subject
       end
       it "should apply each event to the entities" do
         entities.each do |entity|
