@@ -88,22 +88,6 @@ module EntityStore
       events.insert({'_type' => event.class.name, '_entity_id' => BSON::ObjectId.from_string(event.entity_id) }.merge(event.attributes) ).to_s
     end
 
-    def get_entity!(id)
-      get_entity(id, true)
-    end
-
-    def get_entity(id, raise_exception=false)
-      options = {
-        raise_exception: raise_exception
-      }
-      if entity = get_entities([id], options)[id]
-        entity
-      else
-        raise NotFound.new(id) if options.fetch(:raise_exception, true)
-        nil
-      end
-    end
-
     # Public: loads the entity from the store, including any available snapshots
     # then loads the events to complete the state
     #
@@ -146,12 +130,6 @@ module EntityStore
       Hash[ result.map { |e| [ e.id, e ] } ]
     end
 
-    # Public: get events for a single entity
-    # Returns  Array of Event instances
-    def get_events(id, since_version=nil)
-      get_events_for_criteria( [ { id: id, since_version: since_version} ] )[id]
-    end
-
     # Public:  get events for an array of criteria objects
     #           because each entity could have a different reference
     #           version this allows optional criteria to be specifed
@@ -164,20 +142,20 @@ module EntityStore
     # get_events_for_criteria([ { id: "23232323"}, { id: "2398429834", since_version: 4 } ] )
     #
     # Returns Hash with id as key and Array of Event instances as value
-    def get_events_for_criteria(criteria)
+    def get_events(criteria)
+      return {} if criteria.empty?
+
       query_items = criteria.map do |item|
         raise ArgumentError.new(":id missing from criteria") unless item[:id]
         item_query = { '_entity_id' => BSON::ObjectId.from_string(item[:id]) }
         item_query['entity_version'] = { '$gt' => item[:since_version] } if item[:since_version]
         item_query
-      end.reject { |i| i.empty? }
-
-      raise "No valid criteria found in #{criteria.map { |c| c.inspect }}" if query_items.empty?
+      end
 
       query = { '$or' => query_items }
 
       options = {
-        :sort => [['_entity_id', Mongo::ASCENDING], ['entity_version', Mongo::ASCENDING], ['_id', Mongo::ASCENDING]]
+        :sort => [['entity_version', Mongo::ASCENDING], ['_id', Mongo::ASCENDING]]
       }
 
       result = Hash[ criteria.map { |item| [ item[:id], [] ] } ]

@@ -176,7 +176,7 @@ describe Store do
         Hash[ entities.select { |e| ids.include?(e.id) }.map { |e| [ e.id, e ] } ]
       end
 
-      storage_client.stub(:get_events_for_criteria) do |criteria|
+      storage_client.stub(:get_events) do |criteria|
         Hash[ criteria.map { |c| [ c[:id], events[c[:id]] ] }]
       end
       store.stub(:storage_client) { storage_client }

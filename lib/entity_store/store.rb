@@ -68,8 +68,6 @@ module EntityStore
     end
 
     def get(id, raise_exception=false)
-      return nil unless id
-
       options = {
         raise_exception: raise_exception
       }
@@ -88,15 +86,17 @@ module EntityStore
 
       entities = storage_client.get_entities(ids, options)
 
-      criteria = entities.values.map { |e| { id: e.id, since_version: e.version } }
+      criteria = entities
+        .reject { |id, entity| entity.nil? }
+        .map  do |id, entity|
+          { id: id, since_version: entity.version }
+        end
 
-      events = storage_client.get_events_for_criteria(criteria)
+      events = storage_client.get_events(criteria)
 
-      # ensure entities are returned in same order as requested
-      ids.map do |id|
-
-        unless entity = entities[id]
-          raise "Unexpected entity with id=#{id} returned" if options.fetch(:raise_exception, true)
+      entities.each do |id, entity|
+        unless entity
+          raise NotFound.new(id) if options.fetch(:raise_exception, true)
           next
         end
 
@@ -111,8 +111,10 @@ module EntityStore
           entity.version = event.entity_version
         end
 
-        entity
       end
+
+      # ensure entities are returned in same order as requested
+      ids.map { |id| entities[id] }
 
     end
 
