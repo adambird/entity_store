@@ -68,6 +68,8 @@ module EntityStore
     end
 
     def get(id, raise_exception=false)
+      return nil unless id
+
       options = {
         raise_exception: raise_exception
       }

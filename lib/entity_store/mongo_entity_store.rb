@@ -170,7 +170,9 @@ module EntityStore
         item_query = { '_entity_id' => BSON::ObjectId.from_string(item[:id]) }
         item_query['entity_version'] = { '$gt' => item[:since_version] } if item[:since_version]
         item_query
-      end
+      end.reject { |i| i.empty? }
+
+      raise "No valid criteria found in #{criteria.map { |c| c.inspect }}" if query_items.empty?
 
       query = { '$or' => query_items }
 
