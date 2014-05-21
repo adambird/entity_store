@@ -99,7 +99,7 @@ module EntityStore
       if entity = get_entities([id], options)[id]
         entity
       else
-        raise NotFound.new(id) if options[:raise_exception]
+        raise NotFound.new(id) if options.fetch(:raise_exception, true)
         nil
       end
     end
@@ -109,7 +109,7 @@ module EntityStore
     #
     # ids           - Array of Strings representation of BSON::ObjectId
     # options       - Hash of options (default: {})
-    #                 :raise_exception - Boolean (optional)
+    #                 :raise_exception - Boolean (default: true)
     #
     # Returns a Hash with key id and value being the entity
     def get_entities(ids, options={})
@@ -118,7 +118,7 @@ module EntityStore
         begin
           BSON::ObjectId.from_string(id)
         rescue BSON::InvalidObjectId
-          raise NotFound.new(id) if options[:raise_exception]
+          raise NotFound.new(id) if options.fetch(:raise_exception, true)
           nil
         end
       end

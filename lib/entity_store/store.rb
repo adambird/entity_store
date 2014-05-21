@@ -79,7 +79,7 @@ module EntityStore
     #
     # ids           - Array of id strings
     # options       - Hash of options (default: {})
-    #                 :raise_exception - Boolean (optional)
+    #                 :raise_exception - Boolean (default true)
     #
     # Returns and Array of entities
     def get_with_ids(ids, options={})
@@ -94,7 +94,7 @@ module EntityStore
       ids.map do |id|
 
         unless entity = entities[id]
-          raise "Unexpected entity with id=#{id} returned" if options[:raise_exception]
+          raise "Unexpected entity with id=#{id} returned" if options.fetch(:raise_exception, true)
           next
         end
 
@@ -104,7 +104,7 @@ module EntityStore
             log_debug { "Applied #{event.inspect} to #{id}" }
           rescue => e
             log_error "Failed to apply #{event.class.name} #{event.attributes} to #{id} with #{e.inspect}", e
-            raise if options[:raise_exception]
+            raise if options.fetch(:raise_exception, true)
           end
           entity.version = event.entity_version
         end
