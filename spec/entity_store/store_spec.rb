@@ -173,7 +173,7 @@ describe Store do
 
     before(:each) do
       storage_client.stub(:get_entities) do |ids|
-        entities.select { |e| ids.include?(e.id) }
+        Hash[ entities.select { |e| ids.include?(e.id) }.map { |e| [ e.id, e ] } ]
       end
 
       storage_client.stub(:get_events_for_criteria) do |criteria|

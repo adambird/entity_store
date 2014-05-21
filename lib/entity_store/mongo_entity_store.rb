@@ -96,7 +96,7 @@ module EntityStore
       options = {
         raise_exception: raise_exception
       }
-      if entity = get_entities([id], options).first
+      if entity = get_entities([id], options)[id]
         entity
       else
         raise NotFound.new(id) if options[:raise_exception]
@@ -111,7 +111,7 @@ module EntityStore
     # options       - Hash of options (default: {})
     #                 :raise_exception - Boolean (optional)
     #
-    # Returns an object of the entity type
+    # Returns a Hash with key id and value being the entity
     def get_entities(ids, options={})
 
       object_ids = ids.map do |id|
@@ -123,7 +123,7 @@ module EntityStore
         end
       end
 
-      entities.find('_id' => { '$in' => object_ids }).map do |attrs|
+      result = entities.find('_id' => { '$in' => object_ids }).map do |attrs|
         begin
           entity_type = EntityStore::Config.load_type(attrs['_type'])
 
@@ -142,6 +142,8 @@ module EntityStore
 
         entity
       end
+
+      Hash[ result.map { |e| [ e.id, e ] } ]
     end
 
     # Public: get events for a single entity

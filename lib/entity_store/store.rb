@@ -86,16 +86,19 @@ module EntityStore
 
       entities = storage_client.get_entities(ids, options)
 
-      criteria = entities.map { |e| { id: e.id, since_version: e.version } }
+      criteria = entities.values.map { |e| { id: e.id, since_version: e.version } }
 
-      storage_client.get_events_for_criteria(criteria).each_pair do |id, events|
+      events = storage_client.get_events_for_criteria(criteria)
 
-        unless entity = entities.find { |e| e.id == id }
+      # ensure entities are returned in same order as requested
+      ids.map do |id|
+
+        unless entity = entities[id]
           raise "Unexpected entity with id=#{id} returned" if options[:raise_exception]
           next
         end
 
-        events.each do |event|
+        events[id].each do |event|
           begin
             event.apply(entity)
             log_debug { "Applied #{event.inspect} to #{id}" }
@@ -105,9 +108,10 @@ module EntityStore
           end
           entity.version = event.entity_version
         end
+
+        entity
       end
 
-      entities
     end
 
     # Public: USE AT YOUR PERIL this clears the ENTIRE data store
