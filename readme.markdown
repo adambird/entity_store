@@ -176,7 +176,7 @@ class MyStore
 
 	end
 
-	def get_events(id, since_version=nil)
+	def get_events(criteria)
 		# returns all events in time sequence since the version if passed otherwise all
 	end
 

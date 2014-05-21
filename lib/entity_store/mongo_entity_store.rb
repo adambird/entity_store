@@ -95,7 +95,7 @@ module EntityStore
     # options       - Hash of options (default: {})
     #                 :raise_exception - Boolean (default: true)
     #
-    # Returns a Hash with key id and value being the entity
+    # Returns an array of entities
     def get_entities(ids, options={})
 
       object_ids = ids.map do |id|
@@ -107,7 +107,7 @@ module EntityStore
         end
       end
 
-      result = entities.find('_id' => { '$in' => object_ids }).map do |attrs|
+      entities.find('_id' => { '$in' => object_ids }).map do |attrs|
         begin
           entity_type = EntityStore::Config.load_type(attrs['_type'])
 
@@ -127,7 +127,6 @@ module EntityStore
         entity
       end
 
-      Hash[ result.map { |e| [ e.id, e ] } ]
     end
 
     # Public:  get events for an array of criteria objects

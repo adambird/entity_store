@@ -81,31 +81,31 @@ module EntityStore
     # options       - Hash of options (default: {})
     #                 :raise_exception - Boolean (default true)
     #
-    # Returns and Array of entities
+    # Returns an Array of entities
     def get_with_ids(ids, options={})
 
       entities = storage_client.get_entities(ids, options)
 
       if options.fetch(:raise_exception, true)
         ids.each do |id|
-          raise NotFound.new(id) unless entities[id]
+          raise NotFound.new(id) unless entities.find { |e| e.id == id }
         end
       end
 
-      criteria = entities.map do |id, entity|
-        { id: id, since_version: entity.version }
+      criteria = entities.map do |entity|
+        { id: entity.id, since_version: entity.version }
       end
 
       events = storage_client.get_events(criteria)
 
-      entities.each do |id, entity|
+      entities.each do |entity|
 
-        events[id].each do |event|
+        events[entity.id].each do |event|
           begin
             event.apply(entity)
-            log_debug { "Applied #{event.inspect} to #{id}" }
+            log_debug { "Applied #{event.inspect} to #{entity.id}" }
           rescue => e
-            log_error "Failed to apply #{event.class.name} #{event.attributes} to #{id} with #{e.inspect}", e
+            log_error "Failed to apply #{event.class.name} #{event.attributes} to #{entity.id} with #{e.inspect}", e
             raise if options.fetch(:raise_exception, true)
           end
           entity.version = event.entity_version
@@ -114,7 +114,7 @@ module EntityStore
       end
 
       # ensure entities are returned in same order as requested
-      ids.map { |id| entities[id] }
+      ids.map { |id| entities.find { |e| e.id == id } }
 
     end
 

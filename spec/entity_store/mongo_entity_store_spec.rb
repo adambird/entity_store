@@ -101,20 +101,20 @@ describe MongoEntityStore do
     subject { store.get_entities( [ id ], options) }
 
     it "should retrieve an entity from the store with the same ID" do
-      subject[id].id.should == saved_entity.id
+      subject.first.id.should == saved_entity.id
     end
 
     it "should retrieve an entity from the store with the same class" do
-      subject[id].class.should == saved_entity.class
+      subject.first.class.should == saved_entity.class
     end
 
     it "should have the same version" do
-      subject[id].version.should == saved_entity.version
+      subject.first.version.should == saved_entity.version
     end
 
     context "when a snapshot does not exist" do
       it "should not have set the name" do
-        subject[id].name.should be_nil
+        subject.first.name.should be_nil
       end
     end
 
@@ -126,7 +126,7 @@ describe MongoEntityStore do
 
       context "when a snapshot key not in use" do
         it "should have set the name" do
-          subject[id].name.should == saved_entity.name
+          subject.first.name.should == saved_entity.name
         end
       end
 
@@ -135,7 +135,7 @@ describe MongoEntityStore do
 
         context "when the key matches the class's key" do
           it "should have set the name" do
-            subject[id].name.should == saved_entity.name
+            subject.first.name.should == saved_entity.name
           end
         end
 
@@ -145,7 +145,7 @@ describe MongoEntityStore do
           end
 
           it "should ignore the invalidated snapshot" do
-            subject[id].name.should be_nil
+            subject.first.name.should be_nil
           end
         end
       end
