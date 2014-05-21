@@ -51,7 +51,7 @@ module EntityStore
       entities.update({'_id' => BSON::ObjectId.from_string(entity.id)}, { '$set' => { 'version' => entity.version } })
     end
 
-    # Public - create a snapshot of the entity and store in the entities collection
+    # Public: create a snapshot of the entity and store in the entities collection
     #
     def snapshot_entity(entity)
       query = {'_id' => BSON::ObjectId.from_string(entity.id)}
@@ -74,7 +74,7 @@ module EntityStore
       entities.update({'_id' => BSON::ObjectId.from_string(id)}, { '$unset' => { 'snapshot' => 1}})
     end
 
-    # Public - remove all snapshots
+    # Public: remove all snapshots
     #
     # type        - String optional class name for the entity
     #
@@ -104,14 +104,12 @@ module EntityStore
       end
     end
 
-    # Public - loads the entity from the store, including any available snapshots
+    # Public: loads the entity from the store, including any available snapshots
     # then loads the events to complete the state
     #
     # ids           - Array of Strings representation of BSON::ObjectId
-    # options       - Hash of options
-    #               {
-    #                 :raise_exceptions => Boolean
-    #               }
+    # options       - Hash of options (default: {})
+    #                 :raise_exception - Boolean (optional)
     #
     # Returns an object of the entity type
     def get_entities(ids, options={})
@@ -146,23 +144,24 @@ module EntityStore
       end
     end
 
-    # Public  - get events for a single entity
-    # Returns - Array of Event instances
+    # Public: get events for a single entity
+    # Returns  Array of Event instances
     def get_events(id, since_version=nil)
       get_events_for_criteria( [ { id: id, since_version: since_version} ] )[id]
     end
 
-    # Public -  get events for an array of criteria objects
+    # Public:  get events for an array of criteria objects
     #           because each entity could have a different reference
     #           version this allows optional criteria to be specifed
     #
     #
     # criteria  - Hash :id mandatory, :since_version optional
     #
-    # eg: get_events_for_criteria([ { id: "23232323"}, { id: "2398429834", since_version: 4 } ] )
+    # Examples
     #
-    # Returns   - Hash with id as key and Array of Event instances as value
+    # get_events_for_criteria([ { id: "23232323"}, { id: "2398429834", since_version: 4 } ] )
     #
+    # Returns Hash with id as key and Array of Event instances as value
     def get_events_for_criteria(criteria)
       query_items = criteria.map do |item|
         raise ArgumentError.new(":id missing from criteria") unless item[:id]

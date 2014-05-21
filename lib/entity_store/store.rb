@@ -75,13 +75,11 @@ module EntityStore
       get_with_ids([id], options).first
     end
 
-    # Public - get a series of entities
+    # Public: get a series of entities
     #
     # ids           - Array of id strings
-    # options       - Hash of options
-    #               {
-    #                 :raise_exceptions => Boolean
-    #               }
+    # options       - Hash of options (default: {})
+    #                 :raise_exception - Boolean (optional)
     #
     # Returns and Array of entities
     def get_with_ids(ids, options={})
@@ -112,7 +110,7 @@ module EntityStore
       entities
     end
 
-    # Public : USE AT YOUR PERIL this clears the ENTIRE data store
+    # Public: USE AT YOUR PERIL this clears the ENTIRE data store
     #
     # confirm     - Symbol that must equal :i_am_sure
     #
@@ -129,7 +127,7 @@ module EntityStore
       @_event_bus ||= EventBus.new
     end
 
-    # Public : returns an array representing a full audit trail for the entity.
+    # Public: returns an array representing a full audit trail for the entity.
     # After each event is applied the state of the entity is rendered.
     # Optionally accepts a block which should return true or false to indicate
     # whether to render the line. The block yields entity, event, lines collection
