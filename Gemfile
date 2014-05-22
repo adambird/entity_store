@@ -3,6 +3,8 @@ gemspec
 
 gem 'rake'
 
+gem 'sqlite3'
+
 group :development, :test do
   gem 'hatchet'
   gem 'rspec'

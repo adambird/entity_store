@@ -19,6 +19,10 @@ module EntityStore
     require_relative 'entity_store/external_store'
   end
 
+  # if defined?(SQLite3)
+    require_relative 'entity_store/sqlite_entity_store'
+  # end
+
   class << self
     def setup
       yield EntityStore::Config.setup
