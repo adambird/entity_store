@@ -77,30 +77,7 @@ describe Store do
   end
 
   describe "#save" do
-    context "when entity has related entities loaded" do
-      before(:each) do
-        @entity = DummyEntityForStore.new(:id => random_string)
-        @entity.version = random_integer * EntityStore::Config.snapshot_threshold + 1
-        @store = Store.new
-        @related_entity = double('Entity')
-        @entity.stub(:loaded_related_entities) { [ @related_entity ] }
-        @store.stub(:do_save)
-      end
 
-      subject { @store.save(@entity) }
-
-      it "should save the entity" do
-        @store.should_receive(:do_save).with(@entity)
-        subject
-      end
-      it "should save them as well" do
-        @store.should_receive(:do_save).with(@related_entity)
-        subject
-      end
-    end
-  end
-
-  describe "#do_save" do
     before(:each) do
       @new_id = random_string
       @entity = DummyEntityForStore.new(:id => random_string)
@@ -112,7 +89,7 @@ describe Store do
       @entity.stub(:pending_events) { [ double('Event') ] }
     end
 
-    subject { @store.do_save(@entity) }
+    subject { @store.save(@entity) }
 
     it "increments the entity version number" do
       expect { subject }.to change { @entity.version }.by 1
@@ -176,45 +153,84 @@ describe Store do
 
   end
 
-  describe "#get" do
+  describe "getters" do
+    let(:ids) { [ random_string, random_string, random_string ] }
+    let(:entities) { ids.map { |id| DummyEntityForStore.new(id: id, version: random_integer) } }
+    let(:events) do
+      Hash[ ids.map do |id|
+        [
+          id,
+          [
+            double("Event", apply: true, entity_version: entities.find { |e| e.id == id } .version + 1),
+            double("Event", apply: true, entity_version: entities.find { |e| e.id == id } .version + 2)
+          ]
+        ]
+      end ]
+    end
+
+    let(:storage_client) { double("StorageClient") }
+    let(:store) { Store.new }
+
     before(:each) do
-      @id = random_integer
-      @entity = DummyEntityForStore.new(id: random_string, version: random_integer)
-      DummyEntityForStore.stub(:new).and_return(@entity)
-      @events = [
-        double("Event", apply: true, entity_version: @entity.version + 1),
-        double("Event", apply: true, entity_version: @entity.version + 2)
-      ]
+      storage_client.stub(:get_entities) do |ids|
+        entities.select { |e| ids.include?(e.id) }
+      end
 
-      @storage_client = double("StorageClient", :get_entity => @entity, :get_events => @events)
-      @store = Store.new
-      @store.stub(:storage_client) { @storage_client }
+      storage_client.stub(:get_events) do |criteria|
+        Hash[ criteria.map { |c| [ c[:id], events[c[:id]] ] }]
+      end
+      store.stub(:storage_client) { storage_client }
+    end
+    describe "#get" do
+      let(:entity) { entities[1] }
+      let(:id) { entity.id }
+
+      subject { store.get(id) }
+
+      it "should retrieve object from the storage client" do
+        storage_client.should_receive(:get_entities).with([id], { raise_exception: false })
+        subject
+      end
+      it "should return the entity" do
+        subject.id.should eq(entity.id)
+      end
+      it "should apply each event to the entity" do
+        events[id].each do |event|
+          event.should_receive(:apply).with(entity)
+        end
+        subject
+      end
+      it "should set the entity version to that of the last event" do
+        subject
+        entity.version.should eq(events[id].last.entity_version)
+      end
     end
 
-    subject { @store.get(@id) }
+    describe "#get_with_ids" do
 
-    it "should retrieve object from the storage client" do
-      @storage_client.should_receive(:get_entity).with(@id, false)
-      subject
-    end
-    it "should assign itself as the related_entity_loader" do
-      @entity.should_receive(:related_entity_loader=).with(@store)
-      subject
-    end
-    it "should return a ride" do
-      subject.should eq(@entity)
-    end
-    it "should retrieve it's events" do
-      @storage_client.should_receive(:get_events).with(@id, @entity.version)
-      subject
-    end
-    it "should apply each event to the entity" do
-      @events.each do |event| event.should_receive(:apply).with(@entity) end
-      subject
-    end
-    it "should set the entity version to that of the last event" do
-      subject
-      @entity.version.should eq(@events.last.entity_version)
+      subject { store.get_with_ids(ids) }
+
+      it "should retrieve object from the storage client" do
+        storage_client.should_receive(:get_entities).with(ids, {})
+        subject
+      end
+      it "should return the entities" do
+        subject.map { |e| e.id }.should eq(ids)
+      end
+      it "should apply each event to the entities" do
+        entities.each do |entity|
+          events[entity.id].each do |event|
+            event.should_receive(:apply).with(entity)
+          end
+        end
+        subject
+      end
+      it "should set the entity version to that of the last event" do
+        subject
+        entities.each do |entity|
+          entity.version.should eq(events[entity.id].last.entity_version)
+        end
+      end
     end
   end
 end

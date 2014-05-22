@@ -20,12 +20,6 @@ module EntityStore
     end
 
     def save(entity)
-      do_save entity
-      entity.loaded_related_entities.each do |e| do_save e end if entity.respond_to?(:loaded_related_entities)
-      entity
-    end
-
-    def do_save(entity)
       # need to look at concurrency if we start storing version on client
       unless entity.pending_events.empty?
         entity.version += 1
@@ -42,7 +36,7 @@ module EntityStore
       end
       entity
     rescue => e
-      log_error "Store#do_save error: #{e.inspect} - #{entity.inspect}", e
+      log_error "Store#save error: #{e.inspect} - #{entity.inspect}", e
       raise e
     end
 
@@ -74,29 +68,67 @@ module EntityStore
     end
 
     def get(id, raise_exception=false)
-      log_debug { "Store#get #{id}"}
-      if entity = storage_client.get_entity(id, raise_exception)
+      options = {
+        raise_exception: raise_exception
+      }
 
-        storage_client.get_events(id, entity.version).each do |event|
+      get_with_ids([id], options).first
+    end
+
+    # Public: get a series of entities
+    #
+    # ids           - Array of id strings
+    # options       - Hash of options (default: {})
+    #                 :raise_exception - Boolean (default true)
+    #
+    # Returns an Array of entities
+    def get_with_ids(ids, options={})
+
+      entities = Hash[ storage_client.get_entities(ids, options).map { |e| [ e.id, e] } ]
+
+      if options.fetch(:raise_exception, true)
+        ids.each do |id|
+          raise NotFound.new(id) unless entities[id]
+        end
+      end
+
+      criteria = entities.map do |id, entity|
+        { id: id, since_version: entity.version }
+      end
+
+      events = storage_client.get_events(criteria)
+
+      entities.each do |id, entity|
+
+        next unless entity_events = events[id]
+
+        entity_events.each do |event|
           begin
             event.apply(entity)
             log_debug { "Applied #{event.inspect} to #{id}" }
           rescue => e
             log_error "Failed to apply #{event.class.name} #{event.attributes} to #{id} with #{e.inspect}", e
+            raise if options.fetch(:raise_exception, true)
           end
           entity.version = event.entity_version
         end
 
-        # assign this entity loader to allow lazy loading of related entities
-        entity.related_entity_loader = self
       end
-      entity
+
+      # ensure entities are returned in same order as requested
+      ids.map { |id| entities[id] }
+
     end
 
-    # Public : USE AT YOUR PERIL this clears the ENTIRE data store
+    # Public: USE AT YOUR PERIL this clears the ENTIRE data store
+    #
+    # confirm     - Symbol that must equal :i_am_sure
     #
     # Returns nothing
-    def clear_all
+    def clear_all(confirm)
+      unless confirm == :i_am_sure
+        raise "#clear_all call with :i_am_sure in order to do this"
+      end
       storage_client.clear
       @_storage_client = nil
     end
@@ -105,7 +137,7 @@ module EntityStore
       @_event_bus ||= EventBus.new
     end
 
-    # Public : returns an array representing a full audit trail for the entity.
+    # Public: returns an array representing a full audit trail for the entity.
     # After each event is applied the state of the entity is rendered.
     # Optionally accepts a block which should return true or false to indicate
     # whether to render the line. The block yields entity, event, lines collection

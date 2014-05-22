@@ -167,8 +167,8 @@ class MyStore
 		# this will be called if the entity has an id
 	end
 
-	def get_entity(id)
-		# returns the entity as an empty shell of the appropriate type
+	def get_entities(ids, options)
+		# returns an array of entities as empty shells of the appropriate type
 		# if a snapshot exists then this should be returned
 	end
 
@@ -176,7 +176,7 @@ class MyStore
 
 	end
 
-	def get_events(id, since_version=nil)
+	def get_events(criteria)
 		# returns all events in time sequence since the version if passed otherwise all
 	end
 

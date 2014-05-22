@@ -56,7 +56,7 @@ describe MongoEntityStore do
       store.add_event(third_event)
     end
 
-    subject { store.get_events(event_entity_id, since_version) }
+    subject { store.get_events( [{ id: event_entity_id, since_version: since_version }])[event_entity_id] }
 
     context "all events" do
       let(:event_entity_id) { entity_id }
@@ -86,7 +86,7 @@ describe MongoEntityStore do
     end
   end
 
-  describe "#get_entity" do
+  describe "#get_entities" do
     let(:entity_class) { DummyEntity }
 
     let(:saved_entity) do
@@ -95,23 +95,26 @@ describe MongoEntityStore do
       entity
     end
 
-    subject { store.get_entity(saved_entity.id) }
+    let(:id) { saved_entity.id }
+    let(:options) { { } }
+
+    subject { store.get_entities( [ id ], options) }
 
     it "should retrieve an entity from the store with the same ID" do
-      subject.id.should == saved_entity.id
+      subject.first.id.should == saved_entity.id
     end
 
     it "should retrieve an entity from the store with the same class" do
-      subject.class.should == saved_entity.class
+      subject.first.class.should == saved_entity.class
     end
 
     it "should have the same version" do
-      subject.version.should == saved_entity.version
+      subject.first.version.should == saved_entity.version
     end
 
     context "when a snapshot does not exist" do
       it "should not have set the name" do
-        subject.name.should be_nil
+        subject.first.name.should be_nil
       end
     end
 
@@ -123,7 +126,7 @@ describe MongoEntityStore do
 
       context "when a snapshot key not in use" do
         it "should have set the name" do
-          subject.name.should == saved_entity.name
+          subject.first.name.should == saved_entity.name
         end
       end
 
@@ -132,7 +135,7 @@ describe MongoEntityStore do
 
         context "when the key matches the class's key" do
           it "should have set the name" do
-            subject.name.should == saved_entity.name
+            subject.first.name.should == saved_entity.name
           end
         end
 
@@ -142,29 +145,26 @@ describe MongoEntityStore do
           end
 
           it "should ignore the invalidated snapshot" do
-            subject.name.should be_nil
+            subject.first.name.should be_nil
           end
         end
       end
     end
-  end
 
-  describe "#get_entity!" do
-    context "when invalid id format passed" do
-      subject { store.get_entity!(random_string) }
+    describe "context when enable exceptions" do
+      let(:options) do
+        { raise_exception: true }
+      end
 
-      it "should raise not found" do
-        expect { subject }.to raise_error(NotFound)
+      context "when invalid id format passed" do
+        let(:id) { random_string }
+
+        it "should raise not found" do
+          expect { subject }.to raise_error(NotFound)
+        end
       end
     end
 
-    context "when valid id format passed but no object exists" do
-      subject { store.get_entity!(random_object_id) }
-
-      it "should raise not found" do
-        expect { subject }.to raise_error(NotFound)
-      end
-    end
   end
 
   describe "#snapshot_entity" do
