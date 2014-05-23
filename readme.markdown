@@ -1,4 +1,4 @@
-# Entity Store
+s# Entity Store
 
 Event sourced entity store implementation that ships with a MongoDB store but this can be replaced. Version 0.2 release now allows for running on iOS as part of the [entity_stormotion gem](http://github.com/adambird/entity_stormotion).
 
@@ -172,7 +172,7 @@ class MyStore
 		# if a snapshot exists then this should be returned
 	end
 
-	def add_event(event)
+	def add_events(events)
 
 	end
 

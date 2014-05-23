@@ -40,7 +40,7 @@ describe Store do
       @entity.version = random_integer
       @entity.pending_events << double(Event, :entity_id= => true, :entity_version= => true)
       @entity.pending_events << double(Event, :entity_id= => true, :entity_version= => true)
-      @storage_client = double("StorageClient", :add_event => true)
+      @storage_client = double("StorageClient", :add_events => true)
       @store = Store.new
       @store.stub(:storage_client) { @storage_client }
       @event_bus = double(EventBus, :publish => true)
@@ -50,9 +50,7 @@ describe Store do
     subject { @store.add_events(@entity) }
 
     it "adds each of the events" do
-      @entity.pending_events.each do |e|
-        @storage_client.should_receive(:add_event).with(e)
-      end
+      @storage_client.should_receive(:add_events).with(@entity.pending_events)
       subject
     end
     it "should assign the new entity_id to each event" do

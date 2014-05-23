@@ -54,12 +54,15 @@ module EntityStore
     end
 
     def add_events(entity)
-      entity.pending_events.each do |e|
-        e.entity_id = entity.id.to_s
-        e.entity_version = entity.version
-        storage_client.add_event(e)
+      items = entity.pending_events.map do |event|
+        event.entity_id = entity.id.to_s
+        event.entity_version = entity.version
+        event
       end
-      entity.pending_events.each {|e| event_bus.publish(entity.type, e) }
+      storage_client.add_events(items)
+
+      items.each {|e| event_bus.publish(entity.type, e) }
+
       entity.clear_pending_events
     end
 
