@@ -14,10 +14,8 @@ module EntityStore
   require_relative 'entity_store/event_bus'
   require_relative 'entity_store/not_found'
 
-  if defined?(Mongo)
-    require_relative 'entity_store/mongo_entity_store'
-    require_relative 'entity_store/external_store'
-  end
+  require_relative 'entity_store/mongo_entity_store'
+  require_relative 'entity_store/external_store'
 
   # if defined?(SQLite3)
     require_relative 'entity_store/sqlite_entity_store'

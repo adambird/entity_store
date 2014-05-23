@@ -45,10 +45,7 @@ module ConcreteStoreHelper
       let(:unrelated_event) { DummyEntityNameSet.new(:entity_id => random_object_id, :entity_version => 4, :name => random_string) }
 
       before do
-        store.add_event(second_event)
-        store.add_event(unrelated_event)
-        store.add_event(first_event)
-        store.add_event(third_event)
+        store.add_events([ second_event, unrelated_event, first_event, third_event ])
       end
 
       subject { store.get_events( [{ id: event_entity_id, since_version: since_version }])[event_entity_id] }

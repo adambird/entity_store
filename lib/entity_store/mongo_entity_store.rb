@@ -84,8 +84,16 @@ module EntityStore
       entities.update(query, { '$unset' => { 'snapshot' => 1 } }, { multi: true })
     end
 
-    def add_event(event)
-      events.insert({'_type' => event.class.name, '_entity_id' => BSON::ObjectId.from_string(event.entity_id) }.merge(event.attributes) ).to_s
+    def add_events(items)
+      docs = items.map do |event|
+        {
+          '_id' => BSON::ObjectId.new,
+          '_type' => event.class.name,
+          '_entity_id' => BSON::ObjectId.from_string(event.entity_id)
+        }.merge(event.attributes)
+      end
+
+      events.insert(docs)
     end
 
     # Public: loads the entity from the store, including any available snapshots

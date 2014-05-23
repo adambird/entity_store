@@ -54,12 +54,15 @@ module EntityStore
     end
 
     def add_events(entity)
-      entity.pending_events.each do |e|
-        e.entity_id = entity.id.to_s
-        e.entity_version = entity.version
-        storage_client.add_event(e)
+      items = entity.pending_events.map do |event|
+        event.entity_id = entity.id.to_s
+        event.entity_version = entity.version
+        event
       end
-      entity.pending_events.each {|e| event_bus.publish(entity.type, e) }
+      storage_client.add_events(items)
+
+      items.each {|e| event_bus.publish(entity.type, e) }
+
       entity.clear_pending_events
     end
 
@@ -84,28 +87,30 @@ module EntityStore
     # Returns an Array of entities
     def get_with_ids(ids, options={})
 
-      entities = storage_client.get_entities(ids, options)
+      entities = Hash[ storage_client.get_entities(ids, options).map { |e| [ e.id, e] } ]
 
       if options.fetch(:raise_exception, true)
         ids.each do |id|
-          raise NotFound.new(id) unless entities.find { |e| e.id == id }
+          raise NotFound.new(id) unless entities[id]
         end
       end
 
-      criteria = entities.map do |entity|
-        { id: entity.id, since_version: entity.version }
+      criteria = entities.map do |id, entity|
+        { id: id, since_version: entity.version }
       end
 
       events = storage_client.get_events(criteria)
 
-      entities.each do |entity|
+      entities.each do |id, entity|
 
-        events[entity.id].each do |event|
+        next unless entity_events = events[id]
+
+        entity_events.each do |event|
           begin
             event.apply(entity)
-            log_debug { "Applied #{event.inspect} to #{entity.id}" }
+            log_debug { "Applied #{event.inspect} to #{id}" }
           rescue => e
-            log_error "Failed to apply #{event.class.name} #{event.attributes} to #{entity.id} with #{e.inspect}", e
+            log_error "Failed to apply #{event.class.name} #{event.attributes} to #{id} with #{e.inspect}", e
             raise if options.fetch(:raise_exception, true)
           end
           entity.version = event.entity_version
@@ -114,7 +119,7 @@ module EntityStore
       end
 
       # ensure entities are returned in same order as requested
-      ids.map { |id| entities.find { |e| e.id == id } }
+      ids.map { |id| entities[id] }
 
     end
 
