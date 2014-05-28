@@ -153,19 +153,30 @@ module EntityStore
 
       query = { '$or' => query_items }
 
-      options = {
-        :sort => [['entity_version', Mongo::ASCENDING], ['_id', Mongo::ASCENDING]]
-      }
-
       result = Hash[ criteria.map { |item| [ item[:id], [] ] } ]
 
-      events.find(query, options).each do |attrs|
-        begin
-          result[attrs['_entity_id'].to_s] << EntityStore::Config.load_type(attrs['_type']).new(attrs)
-        rescue => e
-          log_error "Error loading type #{attrs['_type']}", e
-        end
+      events.find(query).each do |attrs|
+        result[attrs['_entity_id'].to_s] << attrs
       end
+
+      result.each do |id, events|
+        # Have to do the sort client side as otherwise the query will not use
+        # indexes (http://docs.mongodb.org/manual/reference/operator/query/or/#or-and-sort-operations)
+        events.sort_by! { |attrs| [attrs['entity_version'], attrs['_id']] }
+
+        # Convert the attributes into event objects
+        events.map! do |attrs|
+          begin
+            EntityStore::Config.load_type(attrs['_type']).new(attrs)
+          rescue => e
+            log_error "Error loading type #{attrs['_type']}", e
+            nil
+          end
+        end
+
+        events.compact!
+      end
+
       result
     end
   end
