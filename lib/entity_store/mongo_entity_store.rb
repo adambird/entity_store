@@ -170,7 +170,7 @@ module EntityStore
       result.each do |id, events|
         # Have to do the sort client side as otherwise the query will not use
         # indexes (http://docs.mongodb.org/manual/reference/operator/query/or/#or-and-sort-operations)
-        events.sort_by! { |attrs| [attrs['entity_version'], attrs['_id']] }
+        events.sort_by! { |attrs| [attrs['entity_version'], attrs['_id'].to_s] }
 
         # Convert the attributes into event objects
         events.map! do |attrs|

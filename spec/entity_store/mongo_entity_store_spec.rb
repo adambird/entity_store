@@ -46,11 +46,12 @@ describe MongoEntityStore do
 
     let(:first_event)     { DummyEntityNameSet.new(:entity_id => entity_id, :entity_version => 1, :name => random_string) }
     let(:second_event)    { DummyEntityNameSet.new(:entity_id => entity_id, :entity_version => 2, :name => random_string) }
-    let(:third_event)     { DummyEntityNameSet.new(:entity_id => entity_id, :entity_version => 3, :name => random_string) }
+    let(:third_event)     { DummyEntityNameSet.new(:entity_id => entity_id, :entity_version => 2, :name => random_string) }
     let(:unrelated_event) { DummyEntityNameSet.new(:entity_id => random_object_id, :entity_version => 4, :name => random_string) }
+    let(:fourth_event)    { DummyEntityNameSet.new(:entity_id => entity_id, :entity_version => 3, :name => random_string) }
 
     before do
-      store.add_events([ second_event, unrelated_event, first_event, third_event ])
+      store.add_events([ second_event, unrelated_event, first_event, third_event, fourth_event ])
     end
 
     subject { store.get_events( [{ id: event_entity_id, since_version: since_version }])[event_entity_id] }
@@ -59,8 +60,8 @@ describe MongoEntityStore do
       let(:event_entity_id) { entity_id }
       let(:since_version) { 0 }
 
-      it "should return the three events in order" do
-        subject.should == [first_event, second_event, third_event]
+      it "should return the four events in order" do
+        subject.should == [first_event, second_event, third_event, fourth_event]
       end
     end
 
@@ -69,7 +70,7 @@ describe MongoEntityStore do
       let(:since_version) { second_event.entity_version }
 
       it "should only include events greater than the given version" do
-        subject.should == [ third_event ]
+        subject.should == [ fourth_event ]
       end
     end
 
