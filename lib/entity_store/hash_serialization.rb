@@ -24,6 +24,9 @@ module EntityStore
       attrs
     end
 
+    alias_method :to_hash, :attributes
+    alias_method :to_h, :attributes
+
     def attribute_methods
       public_methods
         .select { |m| m =~ /\w\=$/ }
