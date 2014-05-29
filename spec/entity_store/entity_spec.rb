@@ -131,6 +131,18 @@ describe Entity do
           expect { entity.things = items }.to raise_error(ArgumentError)
         end
       end
+      context "when already populated" do
+        let(:items) { [ ThingEntityValue.new(name: random_string), ThingEntityValue.new(name: random_string)] }
+
+        before(:each) do
+          entity.things = [{ name: random_string }, { name: random_string }]
+          entity.things = items
+        end
+
+        it "should replace the contents" do
+          entity.things.should eq(items)
+        end
+      end
     end
 
     describe "getter" do
