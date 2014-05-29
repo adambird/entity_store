@@ -26,21 +26,25 @@ module EntityStore
       end
 
       def entity_value_array_attribute name, klass
-        define_method(name) {
-          instance_variable_get("@_#{name}") || instance_variable_set("@_#{name}", [])
-        }
+        variable_name = "@_#{name}".to_sym
 
-        define_method("#{name}=") do |value|
-          value.each do |item|
-            case item
+        define_method(name) do
+          instance_variable_get(variable_name) || instance_variable_set(variable_name, [])
+        end
+
+        define_method("#{name}=") do |values|
+          mapped_values = values.map do |value|
+            case value
             when Hash
-              send(name) << klass.new(item)
+              klass.new(value)
             when klass
-              send(name) << item
+              value
             else
-              raise ArgumentError.new("#{item.class.name} not supported. Expecting #{klass.name}")
+              raise ArgumentError.new("#{value.class} not supported. Expecting #{klass.name}")
             end
           end
+
+          instance_variable_set(variable_name, mapped_values)
         end
       end
 
