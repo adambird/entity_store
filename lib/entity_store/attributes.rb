@@ -33,7 +33,7 @@ module EntityStore
         end
 
         define_method("#{name}=") do |values|
-          mapped_values = values.map do |value|
+          mapped_values = (values || []).map do |value|
             case value
             when Hash
               klass.new(value)

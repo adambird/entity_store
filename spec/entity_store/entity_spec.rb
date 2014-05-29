@@ -143,6 +143,15 @@ describe Entity do
           entity.things.should eq(items)
         end
       end
+      context "when passed nil" do
+        before(:each) do
+          entity.things = nil
+        end
+
+        it "should result in an empty array" do
+          entity.things.should be_empty
+        end
+      end
     end
 
     describe "getter" do
