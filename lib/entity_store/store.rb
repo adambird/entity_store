@@ -28,8 +28,10 @@ module EntityStore
         else
           entity.id = storage_client.add_entity(entity)
         end
-        add_events(entity)
-        snapshot_entity(entity) if entity.version % Config.snapshot_threshold == 0
+
+        add_events(entity) do
+          snapshot_entity(entity) if entity.version % Config.snapshot_threshold == 0
+        end
 
         # publish version increment signal event to the bus
         event_bus.publish(entity.type, entity.generate_version_incremented_event)
@@ -60,6 +62,8 @@ module EntityStore
         event
       end
       storage_client.add_events(items)
+
+      yield if block_given?
 
       items.each {|e| event_bus.publish(entity.type, e) }
 

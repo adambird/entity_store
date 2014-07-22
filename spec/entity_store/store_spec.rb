@@ -82,7 +82,7 @@ describe Store do
       @entity.version = random_integer * EntityStore::Config.snapshot_threshold
       @storage_client = double("StorageClient", :save_entity => true)
       @store = Store.new
-      @store.stub(:add_events)
+      @store.stub(:add_events).and_yield
       @store.stub(:storage_client) { @storage_client }
       @entity.stub(:pending_events) { [ double('Event') ] }
     end
