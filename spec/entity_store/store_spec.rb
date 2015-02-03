@@ -79,7 +79,6 @@ describe Store do
     before(:each) do
       @new_id = random_string
       @entity = DummyEntityForStore.new(:id => random_string)
-      @entity.version = random_integer * EntityStore::Config.snapshot_threshold
       @storage_client = double("StorageClient", :save_entity => true)
       @store = Store.new
       @store.stub(:add_events).and_yield
@@ -139,13 +138,28 @@ describe Store do
     end
 
     context "when entity version is commensurate with snapshotting" do
-      before(:each) do
-        @entity.version = random_integer * EntityStore::Config.snapshot_threshold - 1
+      context "due to modulus of snapshot_threshold" do
+        before(:each) do
+          @entity.version = random_integer * EntityStore::Config.snapshot_threshold - 1
+        end
+
+        it "should snapshot the entity" do
+          @storage_client.should_receive(:snapshot_entity).with(@entity)
+          subject
+        end
       end
 
-      it "should snapshot the entity" do
-        @storage_client.should_receive(:snapshot_entity).with(@entity)
-        subject
+      context "due to more than snapshot_threshold versions having passed since last snapshot" do
+        before(:each) do
+          starting_version = random_integer
+          @entity.version = starting_version
+          @entity.version = starting_version + EntityStore::Config.snapshot_threshold + 1
+        end
+
+        it "should snapshot the entity" do
+          @storage_client.should_receive(:snapshot_entity).with(@entity)
+          subject
+        end
       end
     end
 
