@@ -32,7 +32,16 @@ module EntityStore
     end
 
     def version=(value)
+      @_snapshot_version = value unless @_snapshot_version
       @_version = value
+    end
+
+    def snapshot_due?
+      if version % Config.snapshot_threshold == 0
+        true
+      else
+        @_snapshot_version and (version - @_snapshot_version) >= Config.snapshot_threshold
+      end
     end
 
     def generate_version_incremented_event

@@ -21,7 +21,9 @@ module EntityStore
 
     def save(entity)
       # need to look at concurrency if we start storing version on client
-      unless entity.pending_events.empty?
+      if entity.pending_events.empty?
+        snapshot_entity(entity) if entity.snapshot_due?
+      else
         entity.version += 1
         if entity.id
           storage_client.save_entity(entity)
@@ -30,7 +32,7 @@ module EntityStore
         end
 
         add_events(entity) do
-          snapshot_entity(entity) if entity.version % Config.snapshot_threshold == 0
+          snapshot_entity(entity) if entity.snapshot_due?
         end
 
         # publish version increment signal event to the bus
