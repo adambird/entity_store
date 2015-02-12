@@ -113,7 +113,7 @@ module EntityStore
 
         entity_events.each do |event|
           begin
-            event.apply(entity)
+            entity.apply_event(event)
             log_debug { "Applied #{event.inspect} to #{id}" }
           rescue => e
             log_error "Failed to apply #{event.class.name} #{event.attributes} to #{id} with #{e.inspect}", e
@@ -162,7 +162,7 @@ module EntityStore
         storage_client.get_events(id, entity.version).each do |event|
 
           begin
-            event.apply(entity)
+            entity.apply_event(event)
             entity.version = event.entity_version
 
             render = true
