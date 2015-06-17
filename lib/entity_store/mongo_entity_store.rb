@@ -15,7 +15,7 @@ module EntityStore
       end
 
       def database
-        @_database ||= MongoEntityStore.connection_profile.split('/').last
+        @_database ||= MongoEntityStore.connection_profile.split('/').last.split('?').first
       end
     end
 
