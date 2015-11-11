@@ -1,8 +1,8 @@
 PATH
   remote: .
   specs:
-    entity_store (0.4.2)
-      bson_ext (~> 1.8)
+    entity_store (0.5.0)
+      bson (~> 1.8)
       hatchet (~> 0.2)
       mongo (~> 1.8)
 
@@ -10,8 +10,6 @@ GEM
   remote: http://rubygems.org/
   specs:
     bson (1.10.1)
-    bson_ext (1.10.1)
-      bson (~> 1.10.1)
     celluloid (0.15.2)
       timers (~> 1.1.0)
     coderay (1.1.0)
@@ -68,3 +66,6 @@ DEPENDENCIES
   rake
   rb-fsevent (~> 0.9.1)
   rspec
+
+BUNDLED WITH
+   1.10.6
