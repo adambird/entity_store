@@ -3,27 +3,20 @@ require 'uri'
 require 'JSON'
 
 module EntityStore
-  class PostgresEntityStore
+  class SqliteEntityStore
     include Logging
-
-    Sequel.extension :pg_array_ops
-    Sequel.extension :pg_json_ops
 
     class << self
       attr_accessor :connection_profile
       attr_writer :connect_timeout
 
       def database
-        @_database ||= Sequel.connect('postgres://localhost/cronofy_test')
-        @_database.extension :pg_array
-        @_database.extension :pg_json
-
-        @_database
+        @_database ||= Sequel.sqlite
       end
     end
 
     def open
-      PostgresEntityStore.database
+      SqliteEntityStore.database
     end
 
     def entities
@@ -35,7 +28,7 @@ module EntityStore
           String :_type
           integer :snapshot_key
           integer :version
-          column :snapshot, :jsonb
+          text :snapshot
         end
       end
 
@@ -51,7 +44,7 @@ module EntityStore
           String :_type
           String :_entity_id
           integer :entity_version
-          column :data, :jsonb
+          text :data
         end
       end
 
@@ -96,7 +89,7 @@ module EntityStore
 
       entities
         .where(:id => entity.id)
-        .update(:snapshot => Sequel.pg_json(entity.attributes), :snapshot_key => snapshot_key )
+        .update(:snapshot => JSON.generate(entity.attributes), :snapshot_key => snapshot_key )
     end
 
     # Public - remove the snapshot for an entity
@@ -118,15 +111,13 @@ module EntityStore
     end
 
     def add_events(items)
-      # Hack to ensure that pg_json is loaded :(
-      open
       items.each do |event|
         doc = {
           :id => BSON::ObjectId.new.to_s,
           :_type => event.class.name,
           :_entity_id => BSON::ObjectId.from_string(event.entity_id).to_s,
           :entity_version => event.entity_version,
-          :data => Sequel.pg_json(event.attributes)
+          :data => JSON.generate(event.attributes)
         }
         events.insert(doc)
       end
@@ -166,7 +157,7 @@ module EntityStore
           end
 
           if attrs[:snapshot]
-            entity = entity_type.new(attrs[:snapshot].to_hash)
+            entity = entity_type.new(JSON.parse(attrs[:snapshot]))
           else
             entity = entity_type.new({'id' => attrs[:id].to_s })
           end
@@ -218,7 +209,7 @@ module EntityStore
         # Convert the attributes into event objects
         events.map! do |attrs|
           begin
-            EntityStore::Config.load_type(attrs[:_type]).new(attrs[:data].to_hash)
+            EntityStore::Config.load_type(attrs[:_type]).new(JSON.parse(attrs[:data]))
           rescue => e
             log_error "Error loading type #{attrs[:_type]}", e
             nil

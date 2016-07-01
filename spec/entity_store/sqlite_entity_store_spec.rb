@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe PostgresEntityStore do
+describe SqliteEntityStore do
   class DummyEntity
     include EntityStore::Entity
 
@@ -175,7 +175,7 @@ describe PostgresEntityStore do
       store.entities.where(:id => entity.id).first
     end
 
-    let(:snapshot) { saved_entity[:snapshot] }
+    let(:snapshot) { JSON.parse(saved_entity[:snapshot]) }
 
     subject { store.snapshot_entity(entity) }
 

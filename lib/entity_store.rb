@@ -16,6 +16,7 @@ module EntityStore
 
   require_relative 'entity_store/mongo_entity_store'
   require_relative 'entity_store/postgres_entity_store'
+  require_relative 'entity_store/sqlite_entity_store'
   require_relative 'entity_store/external_store'
 
   class << self

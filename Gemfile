@@ -6,6 +6,7 @@ gem 'rake'
 group :development, :test do
   gem 'hatchet'
   gem 'sqlite3'
+  gem 'pg'
   gem 'rspec'
   gem 'guard-rspec'
   gem 'growl'
