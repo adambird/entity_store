@@ -69,7 +69,7 @@ module EntityStore
     end
 
     def save_entity(entity)
-      entities.where(:id => id).update(:version => entity.version)
+      entities.where(:id => entity.id).update(:version => entity.version)
     end
 
     # Public: create a snapshot of the entity and store in the entities collection
