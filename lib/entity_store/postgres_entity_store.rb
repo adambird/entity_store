@@ -96,7 +96,7 @@ module EntityStore
 
       entities
         .where(:id => entity.id)
-        .update(:snapshot => Sequel.pg_json(entity.attributes), :snapshot_key => snapshot_key )
+        .update(:snapshot => TypedJSON.generate(entity.attributes), :snapshot_key => snapshot_key )
     end
 
     # Public - remove the snapshot for an entity
@@ -126,9 +126,147 @@ module EntityStore
           :_type => event.class.name,
           :_entity_id => BSON::ObjectId.from_string(event.entity_id).to_s,
           :entity_version => event.entity_version,
-          :data => Sequel.pg_json(event.attributes)
+          :data => TypedJSON.generate(event.attributes),
         }
         events.insert(doc)
+      end
+    end
+
+    class TypedJSON
+      def self.generate(obj, *args)
+        hash_dup = each_with_parent(obj)
+        JSON.generate(hash_dup, *args)
+      end
+
+      def self.map_to_json(obj)
+        case obj
+        when Time
+          JSONTime.new(obj)
+        when Date
+          JSONDate.new(obj)
+        when DateTime
+          JSONDateTime.new(obj)
+        else
+          obj
+        end
+      end
+
+      def self.each_with_parent(hash, result=nil, parent=nil)
+        duplicated_hash = {} || result
+
+        hash.each do |k, v|
+          if v === Hash
+            each_with_parent(v, duplicated_hash, k)
+          else
+            duplicated_hash[k] = map_to_json(v)
+          end
+        end
+
+        duplicated_hash
+      end
+    end
+
+
+    class JSONTime < SimpleDelegator
+      # Deserializes JSON string by converting time since epoch to Time
+      def self.json_create(object)
+        if usec = object.delete('u') # used to be tv_usec -> tv_nsec
+          object['n'] = usec * 1000
+        end
+        if method_defined?(:tv_nsec)
+          Time.at(object['s'], Time.Rational(object['n'], 1000))
+        else
+          Time.at(object['s'], object['n'] / 1000)
+        end
+      end
+
+      # Returns a hash, that will be turned into a JSON object and represent this
+      # object.
+      def as_json(*)
+        nanoseconds = [ tv_usec * 1000 ]
+        respond_to?(:tv_nsec) and nanoseconds << tv_nsec
+        nanoseconds = nanoseconds.max
+        {
+          JSON.create_id => self.class.name,
+          's'            => tv_sec,
+          'n'            => nanoseconds,
+        }
+      end
+
+      # Stores class name (Time) with number of seconds since epoch and number of
+      # microseconds for Time as JSON string
+      def to_json(*args)
+        as_json.to_json(*args)
+      end
+    end
+
+    class JSONDate < SimpleDelegator
+      # Deserializes JSON string by converting Julian year <tt>y</tt>, month
+      # <tt>m</tt>, day <tt>d</tt> and Day of Calendar Reform <tt>sg</tt> to Date.
+      def self.json_create(object)
+        Date.civil(*object.values_at('y', 'm', 'd', 'sg'))
+      end
+
+      #alias start sg unless method_defined?(:start)
+
+      # Returns a hash, that will be turned into a JSON object and represent this
+      # object.
+      def as_json(*)
+        {
+          JSON.create_id => self.class.name,
+          'y' => year,
+          'm' => month,
+          'd' => day,
+          'sg' => start,
+        }
+      end
+
+      # Stores class name (Date) with Julian year <tt>y</tt>, month <tt>m</tt>, day
+      # <tt>d</tt> and Day of Calendar Reform <tt>sg</tt> as JSON string
+      def to_json(*args)
+        as_json.to_json(*args)
+      end
+    end
+
+    class JSONDateTime < SimpleDelegator
+      # Deserializes JSON string by converting year <tt>y</tt>, month <tt>m</tt>,
+      # day <tt>d</tt>, hour <tt>H</tt>, minute <tt>M</tt>, second <tt>S</tt>,
+      # offset <tt>of</tt> and Day of Calendar Reform <tt>sg</tt> to DateTime.
+      def self.json_create(object)
+        args = object.values_at('y', 'm', 'd', 'H', 'M', 'S')
+        of_a, of_b = object['of'].split('/')
+        if of_b and of_b != '0'
+          args << DateTime.Rational(of_a.to_i, of_b.to_i)
+        else
+          args << of_a
+        end
+        args << object['sg']
+        DateTime.civil(*args)
+      end
+
+      #alias start sg unless method_defined?(:start)
+
+      # Returns a hash, that will be turned into a JSON object and represent this
+      # object.
+      def as_json(*)
+        {
+          JSON.create_id => self.class.name,
+          'y' => year,
+          'm' => month,
+          'd' => day,
+          'H' => hour,
+          'M' => min,
+          'S' => sec,
+          'of' => offset.to_s,
+          'sg' => start,
+        }
+      end
+
+      # Stores class name (DateTime) with Julian year <tt>y</tt>, month <tt>m</tt>,
+      # day <tt>d</tt>, hour <tt>H</tt>, minute <tt>M</tt>, second <tt>S</tt>,
+      # offset <tt>of</tt> and Day of Calendar Reform <tt>sg</tt> as JSON string
+      def to_json(*args)
+        as_json.to_json(*args)
       end
     end
 
@@ -141,7 +279,7 @@ module EntityStore
     #
     # Returns an array of entities
     def get_entities(ids, options={})
-
+      # not actually needed
       object_ids = ids.map do |id|
         begin
           BSON::ObjectId.from_string(id)
@@ -166,7 +304,8 @@ module EntityStore
           end
 
           if attrs[:snapshot]
-            entity = entity_type.new(attrs[:snapshot].to_hash)
+            hash = JSON.load(Sequel.object_to_json(attrs[:snapshot]))
+            entity = entity_type.new(hash)
           else
             entity = entity_type.new({'id' => attrs[:id].to_s })
           end
@@ -218,7 +357,8 @@ module EntityStore
         # Convert the attributes into event objects
         events.map! do |attrs|
           begin
-            EntityStore::Config.load_type(attrs[:_type]).new(attrs[:data].to_hash)
+            hash = JSON.load(Sequel.object_to_json(attrs[:data]))
+            EntityStore::Config.load_type(attrs[:_type]).new(hash)
           rescue => e
             log_error "Error loading type #{attrs[:_type]}", e
             nil

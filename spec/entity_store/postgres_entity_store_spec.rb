@@ -1,10 +1,10 @@
 require 'spec_helper'
 
 describe PostgresEntityStore do
-  class DummyEntity
+  class DummyEntityWithDate
     include EntityStore::Entity
 
-    attr_accessor :name, :description
+    attr_accessor :name, :description, :date
 
     def set_name(new_name)
       record_event DummyEntityNameSet.new(name: new_name)
@@ -84,10 +84,11 @@ describe PostgresEntityStore do
   end
 
   describe "#get_entities" do
-    let(:entity_class) { DummyEntity }
+    let(:entity_class) { DummyEntityWithDate }
+    let(:entity_date) { random_time }
 
     let(:saved_entity) do
-      entity = entity_class.new(:name => random_string, :description => random_string)
+      entity = entity_class.new(:name => random_string, :description => random_string, :date => entity_date)
       entity.id = store.add_entity(entity)
       entity
     end
@@ -113,6 +114,10 @@ describe PostgresEntityStore do
       it "should not have set the name" do
         subject.first.name.should be_nil
       end
+
+      it "should not have a date see" do
+        subject.first.date.should be_nil
+      end
     end
 
     context "when a snapshot exists" do
@@ -124,6 +129,10 @@ describe PostgresEntityStore do
       context "when a snapshot key not in use" do
         it "should have set the name" do
           subject.first.name.should == saved_entity.name
+        end
+
+        it "should have a date set" do
+          subject.first.date.should == saved_entity.date
         end
       end
 
@@ -165,7 +174,7 @@ describe PostgresEntityStore do
   end
 
   describe "#snapshot_entity" do
-    let(:entity_class) { DummyEntity }
+    let(:entity_class) { DummyEntityWithDate }
 
     let(:entity) do
       entity_class.new(:id => random_object_id, :version => random_integer, :name => random_string)
