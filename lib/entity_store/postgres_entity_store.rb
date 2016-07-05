@@ -1,6 +1,6 @@
 require 'sequel'
 require 'uri'
-require 'JSON'
+require 'json'
 
 module EntityStore
   class PostgresEntityStore
@@ -146,17 +146,20 @@ module EntityStore
           JSONDate.new(obj)
         when DateTime
           JSONDateTime.new(obj)
+        when Symbol
+          JSONSymbol.new(obj)
         else
           obj
         end
       end
 
-      def self.each_with_parent(hash, result=nil, parent=nil)
+      def self.each_with_parent(hash, result=nil)
         duplicated_hash = {} || result
 
         hash.each do |k, v|
-          if v === Hash
-            each_with_parent(v, duplicated_hash, k)
+          case v
+          when Hash
+            duplicated_hash[k] = each_with_parent(v, duplicated_hash)
           else
             duplicated_hash[k] = map_to_json(v)
           end
@@ -166,6 +169,26 @@ module EntityStore
       end
     end
 
+    class JSONSymbol < SimpleDelegator
+      # Returns a hash, that will be turned into a JSON object and represent this
+      # object.
+      def as_json(*)
+        {
+          JSON.create_id => self.class.name,
+          's'            => to_s,
+        }
+      end
+
+      # Stores class name (Symbol) with String representation of Symbol as a JSON string.
+      def to_json(*a)
+        as_json.to_json(*a)
+      end
+
+      # Deserializes JSON string by converting the <tt>string</tt> value stored in the object to a Symbol
+      def self.json_create(o)
+        o['s'].to_sym
+      end
+    end
 
     class JSONTime < SimpleDelegator
       # Deserializes JSON string by converting time since epoch to Time

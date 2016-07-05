@@ -4,7 +4,8 @@ describe PostgresEntityStore do
   class DummyEntityWithDate
     include EntityStore::Entity
 
-    attr_accessor :name, :description, :date
+    attr_accessor :name, :description, :date, :symbol, :symbol_hash
+    attr_accessor :nested_hash
 
     def set_name(new_name)
       record_event DummyEntityNameSet.new(name: new_name)
@@ -88,7 +89,14 @@ describe PostgresEntityStore do
     let(:entity_date) { random_time }
 
     let(:saved_entity) do
-      entity = entity_class.new(:name => random_string, :description => random_string, :date => entity_date)
+      entity = entity_class.new(
+        :name => random_string,
+        :description => random_string,
+        :date => entity_date,
+        :symbol => :foo,
+        :symbol_hash => { foo: :bar },
+        :nested_hash => { foo: { bar: :baz } },
+      )
       entity.id = store.add_entity(entity)
       entity
     end
@@ -115,8 +123,12 @@ describe PostgresEntityStore do
         subject.first.name.should be_nil
       end
 
-      it "should not have a date see" do
+      it "should not have a date set" do
         subject.first.date.should be_nil
+      end
+
+      it "should not have a symbol set" do
+        subject.first.symbol.should be_nil
       end
     end
 
@@ -133,6 +145,15 @@ describe PostgresEntityStore do
 
         it "should have a date set" do
           subject.first.date.should == saved_entity.date
+        end
+
+        it "should have a symbol set" do
+          subject.first.symbol.should == :foo
+        end
+
+        it "should have a symbol hash set" do
+          subject.first.symbol_hash.should ==  { "foo" => :bar }
+          subject.first.nested_hash.should ==  { "foo" => { "bar" => :baz } }
         end
       end
 
