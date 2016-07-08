@@ -38,6 +38,7 @@ describe PostgresEntityStore do
   end
 
   let(:store) do
+    described_class.connection_string = ENV['SQL_CONNECTION'] || 'postgres://localhost/cronofy_test'
     described_class.new
   end
 
