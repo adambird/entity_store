@@ -13,7 +13,6 @@ module EntityStore
   require_relative 'entity_store/event_data_object'
   require_relative 'entity_store/event_bus'
   require_relative 'entity_store/not_found'
-  require_relative 'entity_store/typed_json'
 
   require_relative 'entity_store/mongo_entity_store'
   require_relative 'entity_store/postgres_entity_store'

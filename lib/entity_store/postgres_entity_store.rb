@@ -1,6 +1,7 @@
 require 'sequel'
 require 'uri'
 require 'json'
+require 'pigeon_hole'
 
 module EntityStore
   class PostgresEntityStore
@@ -22,10 +23,9 @@ module EntityStore
       end
 
       def init
-        db = database
-        unless db.table_exists?(:entities)
-          db.create_table :entities do
-            String :id
+        unless database.table_exists?(:entities)
+          database.create_table :entities do
+            column :id, :bytea, primary_key: true
             String :_type
             integer :snapshot_key
             integer :version
@@ -33,11 +33,11 @@ module EntityStore
           end
         end
 
-        unless db.table_exists?(:entity_events)
-          db.create_table :entity_events do
-            String :id
+        unless database.table_exists?(:entity_events)
+          database.create_table :entity_events do
+            column :id, :bytea, primary_key: true
             String :_type
-            String :_entity_id
+            column :_entity_id, :bytea
             integer :entity_version
             column :data, :jsonb
           end
@@ -93,7 +93,7 @@ module EntityStore
 
       entities
         .where(:id => entity.id)
-        .update(:snapshot => TypedJSON.generate(entity.attributes), :snapshot_key => snapshot_key )
+        .update(:snapshot => PigeonHole.generate(entity.attributes), :snapshot_key => snapshot_key )
     end
 
     # Public - remove the snapshot for an entity
@@ -121,7 +121,7 @@ module EntityStore
           :_type => event.class.name,
           :_entity_id => BSON::ObjectId.from_string(event.entity_id).to_s,
           :entity_version => event.entity_version,
-          :data => TypedJSON.generate(event.attributes),
+          :data => PigeonHole.generate(event.attributes),
         }
         events.insert(doc)
       end
@@ -160,7 +160,7 @@ module EntityStore
           end
 
           if attrs[:snapshot]
-            hash = JSON.load(Sequel.object_to_json(attrs[:snapshot]))
+            hash = PigeonHole.load(Sequel.object_to_json(attrs[:snapshot]))
             entity = entity_type.new(hash)
           else
             entity = entity_type.new({'id' => attrs[:id].to_s })

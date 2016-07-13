@@ -37,6 +37,7 @@ GEM
     mongo (1.10.1)
       bson (~> 1.10.1)
     pg (0.18.4)
+    pigeon_hole (0.0.1)
     pry (0.9.12.6)
       coderay (~> 1.0)
       method_source (~> 0.8)
@@ -68,6 +69,7 @@ DEPENDENCIES
   guard-rspec
   hatchet
   pg
+  pigeon_hole
   rake
   rb-fsevent (~> 0.9.1)
   rspec
