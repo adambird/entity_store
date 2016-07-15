@@ -15,6 +15,8 @@ module EntityStore
       attr_writer :connect_timeout
 
       def database
+        return @_database if @_database
+
         @_database ||= Sequel.connect(connection_string)
         @_database.extension :pg_array
         @_database.extension :pg_json
