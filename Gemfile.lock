@@ -5,12 +5,13 @@ PATH
       bson (~> 1.8)
       hatchet (~> 0.2)
       mongo (~> 1.8)
+      pigeon_hole (~> 0.0.1)
       sequel
 
 GEM
   remote: http://rubygems.org/
   specs:
-    bson (1.10.1)
+    bson (1.12.5)
     celluloid (0.15.2)
       timers (~> 1.1.0)
     coderay (1.1.0)
@@ -34,8 +35,8 @@ GEM
       rb-inotify (>= 0.9)
     lumberjack (1.0.5)
     method_source (0.8.2)
-    mongo (1.10.1)
-      bson (~> 1.10.1)
+    mongo (1.12.5)
+      bson (= 1.12.5)
     pg (0.18.4)
     pigeon_hole (0.0.1)
     pry (0.9.12.6)
