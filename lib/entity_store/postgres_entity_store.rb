@@ -162,7 +162,7 @@ module EntityStore
           end
 
           if attrs[:snapshot]
-            hash = PigeonHole.load(Sequel.object_to_json(attrs[:snapshot]))
+            hash = attrs[:snapshot].to_h
             entity = entity_type.new(hash)
           else
             entity = entity_type.new({'id' => attrs[:id].to_s })
@@ -205,7 +205,7 @@ module EntityStore
 
         result[item[:id]] = query.order(:entity_version, :id).map do |attrs|
           begin
-            hash = JSON.load(Sequel.object_to_json(attrs[:data]))
+            hash = attrs[:data].to_h
             EntityStore::Config.load_type(attrs[:_type]).new(hash)
           rescue => e
             log_error "Error loading type #{attrs[:_type]}", e
