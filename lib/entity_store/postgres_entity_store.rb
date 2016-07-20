@@ -68,10 +68,9 @@ module EntityStore
     def ensure_indexes
     end
 
-    def add_entity(entity)
-      id = BSON::ObjectId.new.to_s
-      entities.insert(:id => id, :_type => entity.class.name, :version => entity.version)
-      id
+    def add_entity(entity, id = BSON::ObjectId.new)
+      entities.insert(:id => id.to_s, :_type => entity.class.name, :version => entity.version)
+      id.to_s
     end
 
     def save_entity(entity)

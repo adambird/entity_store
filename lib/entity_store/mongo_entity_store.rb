@@ -43,8 +43,8 @@ module EntityStore
       events.ensure_index([['_entity_id', Mongo::ASCENDING], ['entity_version', Mongo::ASCENDING], ['_id', Mongo::ASCENDING]])
     end
 
-    def add_entity(entity)
-      entities.insert('_type' => entity.class.name, 'version' => entity.version).to_s
+    def add_entity(entity, id = BSON::ObjectId.new)
+      entities.insert('_id' => id, '_type' => entity.class.name, 'version' => entity.version).to_s
     end
 
     def save_entity(entity)
