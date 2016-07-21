@@ -116,9 +116,14 @@ module EntityStore
     end
 
     def add_events(items)
-      items.each do |event|
+      events_with_id = items.map { |e| [ BSON::ObjectId.new, e ] }
+      add_events_with_ids(events_with_id)
+    end
+
+    def add_events_with_ids(event_id_map)
+      event_id_map.each do |id, event|
         doc = {
-          :id => BSON::ObjectId.new.to_s,
+          :id => id.to_s,
           :_type => event.class.name,
           :_entity_id => BSON::ObjectId.from_string(event.entity_id).to_s,
           :entity_version => event.entity_version,
