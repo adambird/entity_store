@@ -27,7 +27,7 @@ module EntityStore
       def init
         unless database.table_exists?(:entities)
           database.create_table :entities do
-            column :id, :bytea, primary_key: true
+            column :id, :char, primary_key: true, size: 24
             String :_type
             integer :snapshot_key
             integer :version
@@ -37,9 +37,9 @@ module EntityStore
 
         unless database.table_exists?(:entity_events)
           database.create_table :entity_events do
-            column :id, :bytea, primary_key: true
+            column :id, :char, primary_key: true, size: 24
             String :_type
-            column :_entity_id, :bytea
+            column :_entity_id, :char, size: 24
             integer :entity_version
             column :data, :jsonb
           end
@@ -210,6 +210,7 @@ module EntityStore
         result[item[:id]] = query.order(:entity_version, :id).map do |attrs|
           begin
             hash = attrs[:data].to_h
+            hash[:entity_version] = attrs[:entity_version]
             EntityStore::Config.load_type(attrs[:_type]).new(hash)
           rescue => e
             log_error "Error loading type #{attrs[:_type]}", e
