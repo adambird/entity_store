@@ -216,7 +216,7 @@ module EntityStore
             log_error "Error loading type #{attrs[:_type]}", e
             next
           end
-        end.compact!
+        end.compact
       end
 
       result
