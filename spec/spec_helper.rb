@@ -2,8 +2,11 @@ require 'rake'
 require 'rspec'
 require 'mongo'
 require 'hatchet'
+require 'sequel'
 
 require "#{Rake.application.original_dir}/lib/entity_store"
+
+require_relative '../lib/sequel/core_ext'
 
 RSpec.configure do |config|
   config.color_enabled = true
