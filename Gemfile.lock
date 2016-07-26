@@ -38,7 +38,7 @@ GEM
     mongo (1.12.5)
       bson (= 1.12.5)
     pg (0.18.4)
-    pigeon_hole (0.0.1)
+    pigeon_hole (0.0.2)
     pry (0.9.12.6)
       coderay (~> 1.0)
       method_source (~> 0.8)
