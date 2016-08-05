@@ -43,8 +43,8 @@ module EntityStore
       events.ensure_index([['_entity_id', Mongo::ASCENDING], ['entity_version', Mongo::ASCENDING], ['_id', Mongo::ASCENDING]])
     end
 
-    def add_entity(entity)
-      entities.insert('_type' => entity.class.name, 'version' => entity.version).to_s
+    def add_entity(entity, id = BSON::ObjectId.new)
+      entities.insert('_id' => id, '_type' => entity.class.name, 'version' => entity.version).to_s
     end
 
     def save_entity(entity)
@@ -85,9 +85,14 @@ module EntityStore
     end
 
     def add_events(items)
-      docs = items.map do |event|
+      events_with_id = items.map { |e| [ BSON::ObjectId.new, e ] }
+      add_events_with_ids(events_with_id)
+    end
+
+    def add_events_with_ids(event_id_map)
+      docs = event_id_map.map do |id, event|
         {
-          '_id' => BSON::ObjectId.new,
+          '_id' => id,
           '_type' => event.class.name,
           '_entity_id' => BSON::ObjectId.from_string(event.entity_id)
         }.merge(event.attributes)
