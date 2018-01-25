@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    entity_store (0.5.0)
+    entity_store (0.6.0)
       bson (~> 1.8)
       hatchet (~> 0.2)
       mongo (~> 1.8)
@@ -68,4 +68,4 @@ DEPENDENCIES
   rspec
 
 BUNDLED WITH
-   1.10.6
+   1.12.5
