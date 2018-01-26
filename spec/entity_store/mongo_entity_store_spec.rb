@@ -84,6 +84,35 @@ describe MongoEntityStore do
     end
   end
 
+  describe "#clear_entity_events" do
+    let(:entity_id) { random_object_id }
+    let(:second_entity_id) { random_object_id }
+
+    let(:first_event)     { DummyEntityNameSet.new(:entity_id => entity_id, :entity_version => 1, :name => random_string) }
+    let(:second_event)    { DummyEntityNameSet.new(:entity_id => entity_id, :entity_version => 2, :name => random_string) }
+    let(:third_event)     { DummyEntityNameSet.new(:entity_id => entity_id, :entity_version => 2, :name => random_string) }
+    let(:unrelated_event) { DummyEntityNameSet.new(:entity_id => second_entity_id, :entity_version => 4, :name => random_string) }
+    let(:fourth_event)    { DummyEntityNameSet.new(:entity_id => entity_id, :entity_version => 3, :name => random_string) }
+
+    before do
+      store.add_events([ second_event, unrelated_event, first_event, third_event, fourth_event ])
+    end
+
+    subject { store.clear_entity_events(entity_id, []) }
+
+    it "clears the events from the entity" do
+      subject
+      events = store.get_events( [ id: entity_id ])[entity_id]
+      expect(events).to be_empty
+    end
+
+    it "does not delete unrelated the events" do
+      subject
+      events = store.get_events( [ id: second_entity_id ])[second_entity_id]
+      expect(events.count).to eq(1)
+    end
+  end
+
   describe "#get_entities" do
     let(:entity_class) { DummyEntity }
 

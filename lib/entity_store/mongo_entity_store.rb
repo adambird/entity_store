@@ -84,6 +84,13 @@ module EntityStore
       entities.update(query, { '$unset' => { 'snapshot' => 1 } }, { multi: true })
     end
 
+    def clear_entity_events(id, excluded_types)
+      events.remove({
+        '_entity_id' => BSON::ObjectId.from_string(id),
+        '_type' => { '$nin' => excluded_types },
+      })
+    end
+
     def add_events(items)
       events_with_id = items.map { |e| [ BSON::ObjectId.new, e ] }
       add_events_with_ids(events_with_id)

@@ -57,6 +57,10 @@ module EntityStore
       storage_client.remove_snapshots type
     end
 
+    def clear_entity_events(id, excluded_types = [])
+      storage_client.clear_entity_events(id, excluded_types)
+    end
+
     def add_events(entity)
       items = entity.pending_events.map do |event|
         event.entity_id = entity.id.to_s
