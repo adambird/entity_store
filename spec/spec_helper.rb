@@ -1,7 +1,7 @@
 require 'rake'
 require 'rspec'
-require 'mongo'
 require 'hatchet'
+require 'bson'
 
 require "#{Rake.application.original_dir}/lib/entity_store"
 

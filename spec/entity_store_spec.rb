@@ -30,12 +30,60 @@ class DummyEntitySubscriber
   end
 end
 
+class DummyStore
+  def open
+  end
+
+  def entities
+    @entities ||= {}
+  end
+
+  def events
+    @events ||= {}
+  end
+
+  def add_entity(entity, id = BSON::ObjectId.new)
+    entities[id] = entity
+    id.to_s
+  end
+
+  def add_events(items)
+    items.each do |item|
+      events[item.entity_id] ||= []
+      events[item.entity_id] << item
+    end
+  end
+
+  def get_entities(ids, options={})
+    result = []
+    ids.each do |id|
+      if entity = entities[BSON::ObjectId.from_string(id)]
+        result << entity
+      end
+    end
+
+    result
+  end
+
+  def get_events(attrs)
+    result = {}
+
+    attrs.each do |attr|
+      result[attr[:id]] = events[attr[:id]]
+    end
+
+    result
+  end
+
+  def save_entity(entity)
+    entities[entity.id] = entity
+  end
+end
+
 describe "end to end" do
   before(:each) do
-    MongoEntityStore.connection_profile = "mongodb://localhost/entity_store_test"
-
     EntityStore::Config.setup do |config|
-      config.store = MongoEntityStore.new
+      config.store = DummyStore.new
       config.event_subscribers << DummyEntitySubscriber
     end
   end

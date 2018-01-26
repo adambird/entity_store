@@ -23,6 +23,9 @@ class DummyAllSubscriber
   end
 end
 
+class DummyExternalStore
+end
+
 describe EventBus do
   before(:each) do
     @entity_type = random_string
@@ -68,7 +71,7 @@ describe EventBus do
 
   describe ".publish_to_feed" do
     before(:each) do
-      @feed_store = double(ExternalStore)
+      @feed_store = double(DummyExternalStore)
       @event_bus.stub(:feed_store) { @feed_store }
     end
 
@@ -87,7 +90,7 @@ describe EventBus do
       @subscriber = double("Subscriber", :dummy_event => true)
       DummySubscriber.stub(:new) { @subscriber }
 
-      @feed_store = double(ExternalStore)
+      @feed_store = double(DummyExternalStore)
       @id = random_object_id
       @feed_store.stub(:get_events) { |since| since == @id ? [] : [
         EventDataObject.new('_id' => @id, '_type' => DummyEvent.name, 'name' => random_string)
