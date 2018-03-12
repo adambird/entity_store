@@ -2,13 +2,13 @@ PATH
   remote: .
   specs:
     entity_store (1.1.0)
-      bson (~> 3.0)
+      bson (~> 4.0)
       hatchet (~> 0.2)
 
 GEM
   remote: http://rubygems.org/
   specs:
-    bson (3.2.7)
+    bson (4.3.0)
     celluloid (0.15.2)
       timers (~> 1.1.0)
     coderay (1.1.0)
