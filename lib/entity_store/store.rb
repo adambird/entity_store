@@ -15,8 +15,8 @@ module EntityStore
 
       entity
     rescue => e
-      logger.error { "Store#add error: #{e.inspect} - #{entity.inspect}" }
-      raise e
+      log_error "Store#add error - id=#{entity.id} (#{entity.class}) - #{e.class} - #{e.message}", e
+      raise
     end
 
     def save(entity)
@@ -40,8 +40,8 @@ module EntityStore
       end
       entity
     rescue => e
-      log_error "Store#save error: #{e.inspect} - #{entity.inspect}", e
-      raise e
+      log_error "Store#save error - id=#{entity.id} (#{entity.class}) - #{e.class} - #{e.message}", e
+      raise
     end
 
     def snapshot_entity(entity)
@@ -120,7 +120,7 @@ module EntityStore
             entity.apply_event(event)
             log_debug { "Applied #{event.inspect} to #{id}" }
           rescue => e
-            log_error "Failed to apply #{event.class.name} #{event.attributes} to #{id} with #{e.inspect}", e
+            log_error "Failed to apply #{event.class.name} - #{e.class} - #{e.message} - entity=#{id}, version=#{event.entity_version}", e
             raise if options.fetch(:raise_exception, true)
           end
           entity.version = event.entity_version
