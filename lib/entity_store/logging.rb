@@ -8,10 +8,7 @@ module EntityStore
     end
 
     def log_error(message, exception)
-      if Config.logger
-        Config.logger.error message
-        Config.logger.error exception.backtrace.join("\n\t")
-      end
+      Config.logger.error(message, exception) if Config.logger
     end
   end
 end

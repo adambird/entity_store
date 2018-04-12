@@ -15,7 +15,7 @@ module EntityStore
       subscriber.new.send(receiver_name, event)
       log_debug { "called #{subscriber.name}##{receiver_name} with #{event.inspect}" }
     rescue => e
-      log_error "#{e.message} when calling #{subscriber.name}##{receiver_name} with #{event.inspect}", e
+      log_error "#{subscriber.name}##{receiver_name} failed - #{e.class} - #{e.message} - entity=#{event.entity_id}, version=#{event.entity_version}", e
     end
 
     def subscribers_to(event_name)
@@ -61,9 +61,9 @@ module EntityStore
           begin
             event = EntityStore::Config.load_type(event_data_object.type).new(event_data_object.attrs)
             subscriber.new.send(event.receiver_name, event)
-            log_info { "replayed #{event.inspect} to #{subscriber.name}##{event.receiver_name}" }
+            log_debug { "replayed #{event.inspect} to #{subscriber.name}##{event.receiver_name}" }
           rescue => e
-            log_error "#{e.message} when replaying #{event_data_object.inspect} to #{subscriber}", e
+            log_error "#{subscriber.name}##{event.receiver_name} replay failed - #{e.class} - #{e.message} - entity=#{event.entity_id}, version=#{event.entity_version}", e
           end
         end
         event_data_objects = feed_store.get_events(event_data_objects.last.id, type, max_items)
