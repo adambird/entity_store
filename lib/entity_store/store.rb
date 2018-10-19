@@ -2,8 +2,17 @@ module EntityStore
   class Store
     include Logging
 
+    def initialize(storage_client = nil, event_bus = nil)
+      @_storage_client = storage_client if storage_client
+      @_event_bus = event_bus if event_bus
+    end
+
     def storage_client
       @_storage_client ||= EntityStore::Config.store
+    end
+
+    def event_bus
+      @_event_bus ||= EventBus.new
     end
 
     def add(entity)
@@ -71,7 +80,7 @@ module EntityStore
 
       yield if block_given?
 
-      items.each {|e| event_bus.publish(entity.type, e) }
+      items.each { |e| event_bus.publish(entity.type, e) }
 
       entity.clear_pending_events
     end
@@ -144,10 +153,6 @@ module EntityStore
       end
       storage_client.clear
       @_storage_client = nil
-    end
-
-    def event_bus
-      @_event_bus ||= EventBus.new
     end
 
     # Public: returns an array representing a full audit trail for the entity.

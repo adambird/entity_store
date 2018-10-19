@@ -4,11 +4,19 @@ module EntityStore
 
     ALL_METHOD = :all_events
 
-    def publish(entity_type, event)
-      publish_to_feed entity_type, event
+    def initialize(event_subscribers = nil)
+      @_event_subscribers = event_subscribers if event_subscribers
+    end
 
-      subscribers_to(event.receiver_name).each do |s| send_to_subscriber s, event.receiver_name, event end
-      subscribers_to_all.each do |s| send_to_subscriber s, ALL_METHOD, event end
+    def event_subscribers
+      @_event_subscribers || EntityStore::Config.event_subscribers
+    end
+
+    def publish(entity_type, event)
+      publish_to_feed(entity_type, event)
+
+      subscribers_to(event.receiver_name).each { |s| send_to_subscriber(s, event.receiver_name, event) }
+      subscribers_to_all.each { |s| send_to_subscriber(s, ALL_METHOD, event) }
     end
 
     def send_to_subscriber subscriber, receiver_name, event
@@ -27,7 +35,7 @@ module EntityStore
     end
 
     def subscribers
-      EntityStore::Config.event_subscribers.map do |subscriber|
+      event_subscribers.map do |subscriber|
         case subscriber
         when String
           Utils.get_type_constant(subscriber)
@@ -46,17 +54,17 @@ module EntityStore
     end
 
     # Public - replay events of a given type to a given subscriber
-    # 
+    #
     # since             - Time reference point
     # type              - String type name of event
-    # subscriber        - Class of the subscriber to replay events to 
-    # 
+    # subscriber        - Class of the subscriber to replay events to
+    #
     # Returns nothing
     def replay(since, type, subscriber)
       max_items = 100
       event_data_objects = feed_store.get_events(since, type, max_items)
 
-      while event_data_objects.count > 0 do 
+      while event_data_objects.count > 0 do
         event_data_objects.each do |event_data_object|
           begin
             event = EntityStore::Config.load_type(event_data_object.type).new(event_data_object.attrs)
