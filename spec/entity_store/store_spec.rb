@@ -79,9 +79,9 @@ describe Store do
       @entity = DummyEntityForStore.new(:name => random_string)
       @entity.id = random_string
       @entity.version = random_integer
-      @entity.pending_events << double(Event, :entity_id= => true, :entity_version= => true)
-      @entity.pending_events << double(Event, :entity_id= => true, :entity_version= => true)
-      @entity.pending_events << double(Event, :entity_id= => true, :entity_version= => true)
+      @entity.pending_events << double(Event, :entity_id => @entity.id, :entity_version => @entity.version)
+      @entity.pending_events << double(Event, :entity_id => @entity.id, :entity_version => @entity.version)
+      @entity.pending_events << double(Event, :entity_id => @entity.id, :entity_version => @entity.version)
       @storage_client = double("StorageClient", :upsert_events => filtered_events)
       @store = Store.new
       @store.stub(:storage_client) { @storage_client }
@@ -97,18 +97,7 @@ describe Store do
       @storage_client.should_receive(:upsert_events).with(@entity.pending_events)
       subject
     end
-    it "should assign the new entity_id to each event" do
-      filtered_events.each do |e|
-        e.should_receive(:entity_id=).with(@entity.id)
-      end
-      subject
-    end
-    it "should assign the current entity version to each event" do
-      filtered_events.each do |e|
-        e.should_receive(:entity_version=).with(@entity.version)
-      end
-      subject
-    end
+
     it "publishes each event to the EventBus" do
       filtered_events.each do |e|
         @event_bus.should_receive(:publish).with(@entity.type, e)
