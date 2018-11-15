@@ -74,6 +74,50 @@ describe Store do
 
   end
 
+  describe "#upsert_events" do
+    before(:each) do
+      @entity = DummyEntityForStore.new(:name => random_string)
+      @entity.id = random_string
+      @entity.version = random_integer
+      @entity.pending_events << double(Event, :entity_id= => true, :entity_version= => true)
+      @entity.pending_events << double(Event, :entity_id= => true, :entity_version= => true)
+      @entity.pending_events << double(Event, :entity_id= => true, :entity_version= => true)
+      @storage_client = double("StorageClient", :upsert_events => filtered_events)
+      @store = Store.new
+      @store.stub(:storage_client) { @storage_client }
+      @event_bus = double(EventBus, :publish => true)
+      @store.stub(:event_bus) { @event_bus}
+    end
+
+    subject { @store.upsert_events(@entity) }
+
+    let(:filtered_events) { @entity.pending_events.take(2) }
+
+    it "adds each of the events" do
+      @storage_client.should_receive(:upsert_events).with(@entity.pending_events)
+      subject
+    end
+    it "should assign the new entity_id to each event" do
+      filtered_events.each do |e|
+        e.should_receive(:entity_id=).with(@entity.id)
+      end
+      subject
+    end
+    it "should assign the current entity version to each event" do
+      filtered_events.each do |e|
+        e.should_receive(:entity_version=).with(@entity.version)
+      end
+      subject
+    end
+    it "publishes each event to the EventBus" do
+      filtered_events.each do |e|
+        @event_bus.should_receive(:publish).with(@entity.type, e)
+      end
+      subject
+    end
+
+  end
+
   describe "#save" do
 
     before(:each) do
