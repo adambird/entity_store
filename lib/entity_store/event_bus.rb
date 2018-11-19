@@ -38,7 +38,7 @@ module EntityStore
       event_subscribers.map do |subscriber|
         case subscriber
         when String
-          Utils.get_type_constant(subscriber)
+          EntityStore::Config.load_type(subscriber)
         else
           subscriber
         end
