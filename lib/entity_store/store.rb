@@ -60,9 +60,7 @@ module EntityStore
     # as a method named _id.
     #
     def upsert(entity)
-      if entity.pending_events.empty?
-        snapshot_entity(entity) if entity.snapshot_due?
-      else
+      unless entity.pending_events.empty?
         entity.version = entity.pending_events.map(&:entity_version).max || 1
 
         if entity.id
@@ -71,9 +69,7 @@ module EntityStore
           entity.id = storage_client.add_entity(entity)
         end
 
-        upsert_events(entity) do
-          snapshot_entity(entity) if entity.snapshot_due?
-        end
+        upsert_events(entity)
 
         # publish version increment signal event to the bus
         event_bus.publish(entity.type, entity.generate_version_incremented_event)
