@@ -27,11 +27,41 @@ module EntityStore
     end
 
     def subscribers_to(event_name)
-      subscribers.select { |s| s.instance_methods.include?(event_name.to_sym) }
+      subscriber_lookup[event_name.to_sym].dup
     end
 
     def subscribers_to_all
-      subscribers.select { |s| s.instance_methods.include?(ALL_METHOD) }
+      subscribers_to(ALL_METHOD)
+    end
+
+    def subscriber_lookup_cache
+      @@lookup_cache ||= Hash.new
+    end
+
+    def subscriber_lookup
+      return generate_subscriber_lookup unless EntityStore::Config.cache_event_subscribers
+
+      @lookup ||= begin
+        lookup_cache_key = event_subscribers.map(&:to_s).join
+
+        if subscriber_lookup_cache[lookup_cache_key]
+          subscriber_lookup_cache[lookup_cache_key]
+        else
+          subscriber_lookup_cache[lookup_cache_key] = generate_subscriber_lookup
+        end
+      end
+    end
+
+    def generate_subscriber_lookup
+      lookup = Hash.new { |h, k| h[k] = Array.new }
+
+      subscribers.each do |s|
+        s.instance_methods.each do |m|
+          lookup[m] << s
+        end
+      end
+
+      lookup
     end
 
     def subscribers
