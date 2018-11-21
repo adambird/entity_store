@@ -53,6 +53,33 @@ module EntityStore
       raise e
     end
 
+    # Upsert an entity where events have existed previously
+    # for example when migrating data
+    #
+    # Please note this method requires that the events expose their id property
+    # as a method named _id.
+    #
+    def upsert(entity)
+      unless entity.pending_events.empty?
+        entity.version = entity.pending_events.map(&:entity_version).max || 1
+
+        if entity.id
+          storage_client.save_entity(entity)
+        else
+          entity.id = storage_client.add_entity(entity)
+        end
+
+        upsert_events(entity)
+
+        # publish version increment signal event to the bus
+        event_bus.publish(entity.type, entity.generate_version_incremented_event)
+      end
+      entity
+    rescue => e
+      log_error "Store#upsert error: #{e.inspect} - #{entity.inspect}", e
+      raise e
+    end
+
     def snapshot_entity(entity)
       log_info { "Store#snapshot_entity : Snapshotting #{entity.id}"}
       storage_client.snapshot_entity(entity)
@@ -81,6 +108,22 @@ module EntityStore
       yield if block_given?
 
       items.each { |e| event_bus.publish(entity.type, e) }
+
+      entity.clear_pending_events
+    end
+
+    def upsert_events(entity)
+      items = entity.pending_events.map do |event|
+        event.entity_id ||= entity.id.to_s
+        event.entity_version ||= entity.version
+        event
+      end
+
+      filtered_items = storage_client.upsert_events(items)
+
+      yield if block_given?
+
+      filtered_items.each { |e| event_bus.publish(entity.type, e) }
 
       entity.clear_pending_events
     end

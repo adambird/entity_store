@@ -4,9 +4,11 @@ module EntityStore
       # Stores
       attr_accessor :store, :feed_store
 
+      attr_accessor :cache_event_subscribers
+
       # Allows config to pass in a lambda or Proc to use as the type loader in place
-      # of the default. 
-      # Original use case was migration of entity classes to new module namespace when 
+      # of the default.
+      # Original use case was migration of entity classes to new module namespace when
       # extracting to a shared library
       attr_accessor :type_loader
 
@@ -17,15 +19,15 @@ module EntityStore
         yield self
 
         raise StandardError.new("store not assigned") unless store
-        store.open 
+        store.open
         feed_store.open if feed_store
       end
-      
+
       def event_subscribers
         @_event_subscribers ||=[]
       end
-      
-      # Public - indicates the version increment that is used to 
+
+      # Public - indicates the version increment that is used to
       # decided whether a snapshot of an entity should be created when it's saved
       def snapshot_threshold
         @_snapshot_threshold ||= 10
@@ -35,7 +37,6 @@ module EntityStore
         @_snapshot_threshold = value
       end
 
-      
       def load_type(type_name)
         if EntityStore::Config.type_loader
           EntityStore::Config.type_loader.call(type_name)
