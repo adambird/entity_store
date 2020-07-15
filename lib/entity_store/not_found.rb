@@ -1,6 +1,6 @@
 module EntityStore
   class NotFound < StandardError
-    def initialise(id)
+    def initialize(id)
       super("no item with id #{id} could be found")
     end
   end
