@@ -40,8 +40,10 @@ module EntityStore
           entity.id = storage_client.add_entity(entity)
         end
 
-        add_events(entity) do
-          snapshot_entity(entity) if entity.snapshot_due?
+        added_events = add_events(entity)
+
+        if entity.snapshot_due? || added_events >= Config.snapshot_threshold
+          snapshot_entity(entity)
         end
 
         # publish version increment signal event to the bus
@@ -105,11 +107,10 @@ module EntityStore
       end
       storage_client.add_events(items)
 
-      yield if block_given?
-
       items.each { |e| event_bus.publish(entity.type, e) }
 
       entity.clear_pending_events
+      items.count
     end
 
     def upsert_events(entity)
@@ -120,8 +121,6 @@ module EntityStore
       end
 
       filtered_items = storage_client.upsert_events(items)
-
-      yield if block_given?
 
       filtered_items.each { |e| event_bus.publish(entity.type, e) }
 

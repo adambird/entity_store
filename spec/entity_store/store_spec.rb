@@ -114,7 +114,7 @@ describe Store do
       @entity = DummyEntityForStore.new(:id => random_string)
       @storage_client = double("StorageClient", :save_entity => true)
       @store = Store.new
-      @store.stub(:add_events).and_yield
+      @store.stub(:add_events) { |entity| entity.pending_events.count }
       @store.stub(:storage_client) { @storage_client }
       @entity.stub(:pending_events) { [ double('Event') ] }
     end
@@ -194,8 +194,23 @@ describe Store do
           subject
         end
       end
-    end
 
+      context "when flushed events exceeds snapshotting threshold" do
+        before(:each) do
+          @entity.version = 1
+          @entity.stub(:pending_events) do
+            (1..EntityStore::Config.snapshot_threshold).map do
+              double('Event')
+            end
+          end
+        end
+
+        it "should snapshot the entity" do
+          @storage_client.should_receive(:snapshot_entity).with(@entity)
+          subject
+        end
+      end
+    end
   end
 
   describe "getters" do

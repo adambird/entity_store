@@ -84,7 +84,7 @@ describe Entity do
       subject { DummyEntity.new(1) }
 
       it "should raise a readable error" do
-        expect { subject }.to raise_error(RuntimeError, "Do not know how to create DummyEntity from Fixnum")
+        expect { subject }.to raise_error(RuntimeError, /\ADo not know how to create DummyEntity from (Integer|Fixnum)\z/)
       end
     end
   end
